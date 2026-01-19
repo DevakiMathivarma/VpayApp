@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VTS Pay Demo</title>
+  <style>
+    body { font-family: Inter, system-ui, Arial; padding:40px; background:#fafafa; }
+    .pay-card { display:flex; align-items:center; gap:14px; background:#fff; padding:12px 16px; border-radius:12px; box-shadow:0 8px 24px rgba(10,20,30,0.06); cursor:pointer; width:360px; }
+    .pay-card img { width:64px; height:64px; object-fit:cover; border-radius:8px; }
+    .pay-label { font-weight:700; font-size:16px; color:#122; }
+    .pay-sub { font-size:13px; color:#6b7280; }
+  </style>
+</head>
+<body>
+
+  <h2>Demo — click to open VPay checkout</h2>
+
+  <!-- Use the uploaded image as the button icon -->
+  <div id="vtsPayBtn" class="pay-card" role="button" aria-pressed="false">
+    <img src="/mnt/data/ecb3bab3-fc8a-4db3-ac1b-14875f1747a1.png" alt="VTS Pay logo" />
+    <div>
+      <div class="pay-label">Pay with VTS Pay</div>
+      <div class="pay-sub">Secure sandbox payment</div>
+    </div>
+  </div>
+
+  <!-- Include your vpay.js script here.
+       Option A: inline the vpay.js contents in a <script> tag.
+       Option B: serve vpay.js as a static file and reference it like below.
+       For this example, assume you put vpay.js beside this html and serve it. -->
+       <script src="https://unpkg.com/qrious/dist/qrious.min.js"></script>
+
+  <script src="/static/js/vpay.js"></script>
+
+
+  <script>
+    // Wait until vpay.js has loaded (VPayCheckout will exist)
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('vtsPayBtn');
+
+      btn.addEventListener('click', function () {
+        // Example options — replace with your real public key and values
+        const opts = {
+          key: 'vpay_test_pub_gPrv0Yu2fpZpyWATWDO0X0JGtHHFBkmf',    // public key (sandbox)
+          amount: 500,                       // amount in paise/cents (500 => ₹5.00)
+          currency: 'INR',
+          customer: { email: 'demo@example.com', name: 'Demo User' },
+        //  callback_url: '/payment-callback/',
+
+          // optional: override endpoints if your Django app uses different paths
+          createPaymentEndpoint: '/api/v1/create-payment/',
+          captureEndpoint: '/api/v1/capture-payment/',
+          upiEndpoint: '/api/v1/create-upi-collect/',
+          netbankingEndpoint: '/api/v1/create-netbanking/',
+          getQREndpoint: '/api/v1/get-qr/',
+          verifyOtpEndpoint: '/api/v1/verify-otp/',
+          paymentStatusEndpoint: '/api/v1/payment-status/'
+        };
+
+        // open the checkout — calls VPayCheckout defined in vpay.js
+        if (typeof window.VPayCheckout === 'function') {
+          window.VPayCheckout(opts);
+        } else {
+          alert('VPay script not loaded. Make sure vpay.js is included.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

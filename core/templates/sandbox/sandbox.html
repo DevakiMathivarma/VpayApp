@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sandbox Payment Simulator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Inter, system-ui, Arial, sans-serif; background:#f7fafc; margin:0;padding:28px}
+    .card{max-width:640px;margin:20px auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    h1{margin:0 0 10px;font-size:20px}
+    .muted{color:#6b7280;font-size:14px}
+    .meta{margin:12px 0;padding:12px;background:#f1f5f9;border-radius:8px;font-size:14px}
+    .btn{display:inline-block;padding:10px 16px;border-radius:8px;background:#ff6a00;color:#fff;border:none;font-weight:700;cursor:pointer}
+    .success{color:#16a34a;font-weight:800}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sandbox Payment Simulator</h1>
+    {% if completed %}
+      <p class="success">✅ Payment marked <strong>success</strong>.</p>
+      <div class="meta">
+        <div><strong>Session:</strong> {{ session.session_id }}</div>
+        <div><strong>Payment ID:</strong> {{ session.payment_id }}</div>
+        <div><strong>Status:</strong> {{ session.status }}</div>
+        <div><strong>Completed at:</strong> {{ session.meta.sandbox_completed_at }}</div>
+      </div>
+      <p class="muted">Return to your checkout — the frontend poll will detect the success state.</p>
+      <p><a href="?session_id={{ session.session_id }}&method={{ method }}" class="btn">Simulate again</a></p>
+    {% else %}
+      <p class="muted">This simulator will immediately mark the session <strong>success</strong> when you click <em>Simulate Pay</em>. No OTP is requested.</p>
+
+      <div class="meta">
+        <div><strong>Session:</strong> {{ session.session_id }}</div>
+        <div><strong>Amount:</strong> {{ session.amount }} {{ session.currency|default:"INR" }}</div>
+        <div><strong>Method:</strong> {{ method|default:"(not specified)" }}</div>
+        {% if bank %}<div><strong>Bank:</strong> {{ bank }}</div>{% endif %}
+        {% if upi %}<div><strong>UPI:</strong> {{ upi }}</div>{% endif %}
+        {% if wallet %}<div><strong>Wallet:</strong> {{ wallet }}</div>{% endif %}
+      </div>
+
+      <form method="post" style="margin-top:12px">
+        {% csrf_token %}
+        <input type="hidden" name="session_id" value="{{ session.session_id }}" />
+        <input type="hidden" name="method" value="{{ method }}" />
+        <input type="hidden" name="bank" value="{{ bank }}" />
+        <input type="hidden" name="upi" value="{{ upi }}" />
+        <input type="hidden" name="wallet" value="{{ wallet }}" />
+        <button class="btn" type="submit">Simulate Pay</button>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

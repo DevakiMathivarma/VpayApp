@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Test Mode KYC - VPay</title>
+  <style>
+    :root {
+      --bg: #f6f8f9;
+      --panel: #fffdfa;
+      --muted: #6b7280;
+      --accent: #f59e0b;
+      --accent-2: #f97316;
+      --soft-shadow: 0 10px 30px rgba(18, 24, 34, 0.06);
+      --card-radius: 14px;
+      --timeline: rgba(14, 24, 36, 0.06);
+      --accent-ink: #0f1724;
+      --success: #10b981;
+      --glass: rgba(255, 255, 255, 0.6);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+
+      .preview-modal{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.preview-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+}
+.preview-box{
+  position:relative;
+  background:#ffffff;
+  border-radius:18px;
+  padding:20px 24px;
+  max-width:560px;
+  width:90%;
+  max-height:80vh;
+  overflow:auto;
+  box-shadow:0 18px 45px rgba(15,23,42,0.22);
+}
+.preview-row{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  font-size:14px;
+  margin-bottom:6px;
+}
+.preview-label{
+  color:#6b7280;
+  flex:0 0 40%;
+}
+.preview-value{
+  font-weight:600;
+  color:#111827;
+  text-align:right;
+  word-break:break-word;
+  flex:1;
+}
+
+    }
+
+    /* page */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(circle at 20% 20%, #fffecf 0%, #fff4b8 20%, transparent 60%),
+        radial-gradient(circle at 80% 80%, #ffcab8 0%, #ffb4a2 30%, transparent 70%),
+        radial-gradient(circle at 50% 50%, #ffe3a3 0%, #ffd59f 40%, #ffc3a0 70%, #ffb3a7 100%);
+      color: var(--accent-ink);
+      -webkit-font-smoothing: antialiased
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 28px auto;
+      padding: 24px;
+      box-sizing: border-box
+    }
+
+    .kyc-wrap {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start
+    }
+
+    .left-col {
+      width: 340px;
+      position: relative;
+      padding: 22px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #fbfbf8);
+      box-shadow: var(--soft-shadow)
+    }
+
+    .right-col {
+      flex: 1;
+      padding: 22px;
+      border-radius: 18px;
+      background: transparent
+    }
+
+    .timeline {
+      position: absolute;
+      right: 8px;
+      top: 28px;
+      bottom: 28px;
+      width: 4px;
+      transform: translateX(-50%);
+      background: var(--timeline);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .timeline .fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 0%;
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.95), rgba(249, 115, 22, 0.95));
+      transition: height .6s cubic-bezier(.2, .9, .2, 1)
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .18s, transform .12s;
+    }
+
+    .step:hover {
+      transform: translateX(6px)
+    }
+
+    .icon-wrap {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 36, 0.04);
+      box-shadow: 0 6px 18px rgba(10, 20, 30, 0.04)
+    }
+
+    .step .title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #0f1724
+    }
+
+    .step .sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    .step.active .icon-wrap {
+      box-shadow: 0 10px 26px rgba(249, 115, 22, 0.18);
+      border: none;
+      background: linear-gradient(180deg, #fff7ed, #fff3e0)
+    }
+
+    .step.completed .icon-wrap {
+      background: linear-gradient(180deg, #ecfdf5, #d1fae5);
+      border: none
+    }
+
+    .step.completed .title {
+      color: var(--success)
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: var(--card-radius);
+      box-shadow: var(--soft-shadow);
+      padding: 22px;
+      margin-bottom: 20px
+    }
+
+    .h1 {
+      font-size: 20px;
+      margin: 0 0 8px 0;
+      font-weight: 800;
+      color: #0b1220
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 16px
+    }
+
+    .row {
+      display: flex;
+      gap: 18px
+    }
+
+    .col {
+      flex: 1;
+      display: flex;
+      flex-direction: column
+    }
+
+    label {
+      font-weight: 700;
+      color: #0b1220;
+      margin-bottom: 8px
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #e9eae9;
+      background: white;
+      font-size: 14px;
+      color: #0b1220;
+      outline: none;
+      transition: box-shadow .12s ease, border-color .12s ease
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      box-shadow: 0 6px 18px rgba(11, 17, 28, 0.06);
+      border-color: rgba(249, 115, 22, 0.22)
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      gap: 12px
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .btn.secondary {
+      background: #eef3f4;
+      color: #0b1220;
+      border: 1px solid #f1f4f5
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: 0 8px 20px rgba(249, 115, 22, 0.16)
+    }
+
+    .id-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px
+    }
+
+    .id-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(11, 17, 28, 0.04);
+      background: linear-gradient(180deg, #fff, #fffbf6);
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s
+    }
+
+    .id-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 30px rgba(11, 17, 28, 0.06)
+    }
+
+    .id-card .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid rgba(11, 17, 28, 0.04)
+    }
+
+    .id-card .meta {
+      flex: 1
+    }
+
+    .id-card .meta .t {
+      font-weight: 800;
+      color: #0b1220
+    }
+
+    .id-card .meta .d {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px
+    }
+
+    .id-card.selected {
+      border: 2px solid rgba(249, 115, 22, 0.18);
+      box-shadow: 0 18px 40px rgba(249, 115, 22, 0.08);
+      background: linear-gradient(180deg, #fff7ed, #fff4ea)
+    }
+
+    .expand {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .38s cubic-bezier(.2, .9, .25, 1);
+      opacity: 0
+    }
+
+    .id-card.selected+.expand {
+      opacity: 1;
+      max-height: 260px;
+      margin-top: 12px
+    }
+
+    .upload-drop {
+      border: 2px dashed rgba(11, 17, 28, 0.06);
+      background: linear-gradient(180deg, #ffffff, #fbfbfa);
+      padding: 22px;
+      border-radius: 12px;
+      text-align: center;
+      color: var(--muted)
+    }
+
+    .upload-drop.drag {
+      background: linear-gradient(180deg, #fff7ed, #fff4ea);
+      border-color: rgba(249, 115, 22, 0.28)
+    }
+
+    .note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    .input-error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.06)
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 6px;
+      display: block;
+    }
+
+    .btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    input[readonly],
+    textarea[readonly] {
+      background: #f8faf9;
+      border-color: #e6f4ea;
+    }
+
+    @media (max-width:1000px) {
+      .kyc-wrap {
+        flex-direction: column;
+        padding: 18px
+      }
+
+      .left-col {
+        width: 100%;
+        display: flex;
+        overflow-x: auto
+      }
+
+      .timeline {
+        display: none
+      }
+
+      .row {
+        flex-direction: column
+      }
+    }
+
+    /* ---------------------------
+   Super animations (append)
+   --------------------------- */
+
+    /* stronger "lines" and borders */
+    .left-col,
+    .card,
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select,
+    .id-card,
+    .icon-wrap,
+    .id-card .icon {
+      border-color: rgba(15, 23, 36, 0.12) !important;
+      /* darker lines */
+      box-shadow: 0 12px 30px rgba(10, 18, 28, 0.07);
+    }
+
+    /* animate the page background: slow drift and color shift */
+    html,
+    body {
+      --bg-shift-duration: 18s;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    html::before,
+    html::after {
+      content: "";
+      position: fixed;
+      inset: -10% -20%;
+      z-index: -2;
+      filter: blur(60px);
+      opacity: 0.65;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      transition: opacity .6s ease;
+    }
+
+    /* warm left glow */
+    html::before {
+      background: radial-gradient(circle at 10% 20%, rgba(255, 247, 196, .85) 0%, rgba(255, 208, 161, .35) 25%, transparent 60%);
+      animation: driftLeft var(--bg-shift-duration) linear infinite;
+    }
+
+    /* coral right glow */
+    html::after {
+      background: radial-gradient(circle at 85% 80%, rgba(255, 191, 170, .85) 0%, rgba(255, 149, 135, .32) 30%, transparent 65%);
+      animation: driftRight calc(var(--bg-shift-duration) * 1.2) linear infinite;
+    }
+
+    /* subtle slow hue rotation of the body gradients */
+    @keyframes driftLeft {
+      0% {
+        transform: translate(0px, 0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translate(-30px, 10px) rotate(1deg);
+      }
+
+      100% {
+        transform: translate(0px, 0px) rotate(0deg);
+      }
+    }
+
+    @keyframes driftRight {
+      0% {
+        transform: translate(0px, 0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translate(30px, -10px) rotate(-1deg);
+      }
+
+      100% {
+        transform: translate(0px, 0px) rotate(0deg);
+      }
+    }
+
+    /* subtle parallax for .container content (feels like floating on aura) */
+    .container {
+      transform: translateZ(0);
+      transition: transform .45s cubic-bezier(.2, .9, .25, 1);
+      will-change: transform;
+    }
+
+    .container:hover {
+      transform: translateY(-6px);
+    }
+
+    /* Card hover polish (shine + lift) */
+    .card {
+      position: relative;
+      overflow: visible;
+      transition: transform .28s cubic-bezier(.2, .9, .2, 1), box-shadow .28s ease;
+      transform-origin: center;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.00));
+      mix-blend-mode: overlay;
+      opacity: 0;
+      transition: opacity .28s ease, transform .28s ease;
+      transform: translateY(6px) scale(.98);
+    }
+
+    .card:hover {
+      transform: translateY(-10px) rotateX(1deg);
+      box-shadow: 0 22px 60px rgba(10, 20, 30, 0.12);
+    }
+
+    .card:hover::after {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* id-card micro animation & hover */
+    .id-card {
+      transition: transform .32s cubic-bezier(.2, .9, .25, 1), box-shadow .32s ease, border-color .28s ease;
+      will-change: transform, box-shadow;
+      transform-origin: center;
+    }
+
+    .id-card:hover {
+      transform: translateY(-10px) rotate(-0.6deg) scale(1.006);
+      box-shadow: 0 20px 48px rgba(10, 18, 28, 0.10);
+    }
+
+    /* selected id-card emphasis */
+    .id-card.selected {
+      border-color: rgba(249, 115, 22, 0.22) !important;
+      box-shadow: 0 28px 80px rgba(249, 115, 22, 0.08);
+    }
+
+    /* icon-wrap pop */
+    .icon-wrap {
+      transition: transform .22s cubic-bezier(.2, .9, .25, 1), box-shadow .22s ease;
+    }
+
+    .step:hover .icon-wrap,
+    .step.active .icon-wrap {
+      transform: translateY(-6px) scale(1.04);
+    }
+
+    /* animated timeline fill (on-load and when .fill height changes) */
+    .timeline .fill {
+      animation: timelineGrow .9s cubic-bezier(.2, .9, .2, 1) forwards;
+      transform-origin: top;
+    }
+
+    @keyframes timelineGrow {
+      from {
+        height: 0%;
+        filter: blur(1px);
+        opacity: 0.6;
+      }
+
+      to {
+        height: 64%;
+        filter: blur(0);
+        opacity: 1;
+      }
+    }
+
+    /* make timeline color stronger */
+    .timeline {
+      background: rgba(15, 23, 36, 0.10);
+    }
+
+    .timeline .fill {
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.98), rgba(249, 115, 22, 0.98));
+    }
+
+    /* buttons - sheen hover + tiny pop */
+    .btn {
+      transition: transform .18s cubic-bezier(.2, .9, .25, 1), box-shadow .18s ease;
+      will-change: transform;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: "";
+      position: absolute;
+      left: -40%;
+      top: -40%;
+      width: 40%;
+      height: 180%;
+      transform: skewX(-18deg) translateX(-100%);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06));
+      transition: transform .6s ease;
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 18px 46px rgba(11, 17, 28, 0.12);
+    }
+
+    .btn:hover::after {
+      transform: skewX(-18deg) translateX(220%);
+    }
+
+    /* primary gradient pulse on load */
+    .btn.primary {
+      animation: pulseAccent 4.2s ease-in-out infinite;
+    }
+
+    @keyframes pulseAccent {
+      0% {
+        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.12);
+        transform: translateY(0);
+      }
+
+      50% {
+        box-shadow: 0 20px 48px rgba(249, 115, 22, 0.14);
+        transform: translateY(-3px);
+      }
+
+      100% {
+        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.12);
+        transform: translateY(0);
+      }
+    }
+
+    /* input focus animations: floating label-esque and underline glow */
+    label.field {
+      position: relative;
+      display: block;
+    }
+
+    label.field .label-text {
+      display: block;
+      transform-origin: left center;
+      transition: transform .22s cubic-bezier(.2, .9, .25, 1), color .18s ease, font-size .18s ease;
+    }
+
+    input,
+    textarea,
+    select {
+      transition: box-shadow .18s ease, border-color .18s ease, transform .12s ease;
+      border: 1px solid rgba(15, 23, 36, 0.08);
+      background-clip: padding-box;
+      position: relative;
+    }
+
+    /* animated underline pseudo-element */
+    label.field::after {
+      content: "";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      height: 3px;
+      bottom: 10px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.95), rgba(249, 115, 22, 0.95));
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform .32s cubic-bezier(.2, .9, .25, 1), opacity .22s;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* on focus/has-value: grow underline, lift label */
+    input:focus+.label-text,
+    input:focus~.label-text,
+    textarea:focus+.label-text,
+    textarea:focus~.label-text,
+    select:focus+.label-text,
+    select:focus~.label-text {
+      transform: translateY(-6px) scale(.98);
+      color: rgba(11, 17, 28, 0.92);
+    }
+
+    /* When the input is focused or not-empty (use :not(:placeholder-shown) for modern browsers) */
+    input:focus,
+    textarea:focus,
+    select:focus,
+    input:not(:placeholder-shown),
+    textarea:not(:placeholder-shown) {
+      box-shadow: 0 12px 40px rgba(249, 115, 22, 0.08);
+      border-color: rgba(249, 115, 22, 0.24);
+    }
+
+    input:focus~label.field::after,
+    input:not(:placeholder-shown)~label.field::after,
+    label.field:has(input:focus)::after,
+    label.field:has(input:not(:placeholder-shown))::after {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+
+    /* fallback selector for browsers that do not support :has (we rely on focus mainly) */
+    label.field:has(input:focus)::after {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+
+    /* small icon-like pulse on input focus (via box-shadow) */
+    input:focus,
+    textarea:focus {
+      outline: none;
+      transition: box-shadow .18s ease, transform .12s ease;
+    }
+
+    /* make placeholders subtle */
+    ::placeholder {
+      color: rgba(11, 17, 28, 0.28) !important;
+    }
+
+    /* upload-drop: animated border + float */
+    .upload-drop {
+      transition: transform .32s cubic-bezier(.2, .9, .2, 1), box-shadow .32s ease, border-color .22s ease;
+      will-change: transform;
+    }
+
+    .upload-drop:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 18px 40px rgba(10, 18, 28, 0.06);
+    }
+
+    /* drag state (already present) - add pulse */
+    .upload-drop.drag {
+      animation: dragPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes dragPulse {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-6px) scale(1.004);
+      }
+
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* small animated heartbeat for success/completed titles */
+    .step.completed .title {
+      animation: successBeat 1.6s ease-in-out 1;
+    }
+
+    @keyframes successBeat {
+      0% {
+        transform: scale(1);
+      }
+
+      40% {
+        transform: scale(1.04);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* make the subtle muted text slightly more legible on the aura */
+    .muted,
+    .help,
+    .note,
+    .id-card .meta .d {
+      color: rgba(11, 17, 28, 0.54);
+    }
+
+
+    /* =========================================================
+   EXTRA SMALL MOBILE (320px – 374px)
+   KYC PAGE – CAREFULLY ADAPTED
+   ========================================================= */
+@media (min-width: 320px) and (max-width: 374px) {
+
+  /* ---------- GLOBAL ---------- */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .container {
+    margin: 12px auto;
+    padding: 12px;
+  }
+
+  /* ---------- MAIN LAYOUT ---------- */
+  .kyc-wrap {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ---------- LEFT COLUMN (STEPS) ---------- */
+  .left-col {
+    width: 100%;
+    padding: 14px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    border-radius: 14px;
+  }
+
+  /* hide vertical timeline */
+  .timeline {
+    display: none;
+  }
+
+  /* steps become horizontal cards */
+  .steps-list {
+    display: flex;
+    gap: 10px;
+  }
+
+  .step {
+    flex: 0 0 220px;
+    padding: 12px;
+    gap: 10px;
+    transform: none;
+  }
+
+  .step:hover {
+    transform: none;
+  }
+
+  .icon-wrap {
+    width: 44px;
+    height: 44px;
+  }
+
+  .step .title {
+    font-size: 13px;
+  }
+
+  .step .sub {
+    font-size: 11px;
+  }
+
+  /* ---------- RIGHT COLUMN ---------- */
+  .right-col {
+    padding: 0;
+  }
+
+  /* ---------- CARDS ---------- */
+  .card {
+    padding: 16px 14px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+  }
+
+  .h1 {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .help {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* ---------- FORM GRID ---------- */
+  .row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  label {
+    font-size: 13px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  textarea,
+  select {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  textarea {
+    min-height: 72px;
+  }
+
+  /* ---------- ACTION BUTTONS ---------- */
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .actions > div {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    width: 100%;
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  /* ---------- ID SELECTION ---------- */
+  .id-grid {
+    gap: 10px;
+  }
+
+  .id-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .id-card .icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .id-card .meta .t {
+    font-size: 14px;
+  }
+
+  .id-card .meta .d {
+    font-size: 12px;
+  }
+
+  .id-card:hover {
+    transform: none;
+  }
+
+  /* ---------- UPLOAD AREA ---------- */
+  .upload-drop {
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  /* ---------- PREVIEW MODAL ---------- */
+  .preview-box {
+    padding: 16px;
+    width: 94%;
+    max-height: 85vh;
+  }
+
+  .preview-row {
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .preview-label {
+    flex: 0 0 42%;
+  }
+
+  /* ---------- SOFTEN HEAVY ANIMATIONS ---------- */
+  .card:hover,
+  .id-card:hover,
+  .btn:hover,
+  .container:hover {
+    transform: none;
+    box-shadow: var(--soft-shadow);
+  }
+
+  html::before,
+  html::after {
+    filter: blur(36px);
+    opacity: 0.45;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE (375px – 424px)
+   KYC PAGE – PRECISION RESPONSIVE
+   ========================================================= */
+@media (min-width: 374px) and (max-width: 424px) {
+
+  /* ---------- GLOBAL ---------- */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .container {
+    margin: 16px auto;
+    padding: 14px;
+  }
+
+  /* ---------- MAIN LAYOUT ---------- */
+  .kyc-wrap {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- LEFT COLUMN (STEPS) ---------- */
+  .left-col {
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    border-radius: 16px;
+  }
+
+  /* hide vertical timeline */
+  .timeline {
+    display: none;
+  }
+
+  /* horizontal step list */
+  .steps-list {
+    display: flex;
+    gap: 12px;
+  }
+
+  .step {
+    flex: 0 0 240px;
+    padding: 14px;
+    gap: 12px;
+    transform: none;
+  }
+
+  .step:hover {
+    transform: none;
+  }
+
+  .icon-wrap {
+    width: 48px;
+    height: 48px;
+  }
+
+  .step .title {
+    font-size: 14px;
+  }
+
+  .step .sub {
+    font-size: 12px;
+  }
+
+  /* ---------- RIGHT COLUMN ---------- */
+  .right-col {
+    padding: 0;
+  }
+
+  /* ---------- CARDS ---------- */
+  .card {
+    padding: 18px 16px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+  }
+
+  .h1 {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  .help {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ---------- FORM GRID ---------- */
+  .row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  textarea,
+  select {
+    font-size: 14px;
+    padding: 11px 14px;
+  }
+
+  textarea {
+    min-height: 80px;
+  }
+
+  /* ---------- ACTION BUTTONS ---------- */
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .actions > div {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    font-size: 14px;
+    padding: 11px 14px;
+  }
+
+  /* ---------- ID SELECTION ---------- */
+  .id-grid {
+    gap: 12px;
+  }
+
+  .id-card {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .id-card .icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .id-card .meta .t {
+    font-size: 15px;
+  }
+
+  .id-card .meta .d {
+    font-size: 13px;
+  }
+
+  .id-card:hover {
+    transform: none;
+  }
+
+  /* ---------- UPLOAD AREA ---------- */
+  .upload-drop {
+    padding: 16px;
+    font-size: 13px;
+  }
+
+  /* ---------- PREVIEW MODAL ---------- */
+  .preview-box {
+    padding: 18px;
+    width: 92%;
+    max-height: 85vh;
+  }
+
+  .preview-row {
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .preview-label {
+    flex: 0 0 40%;
+  }
+
+  /* ---------- REDUCE HEAVY EFFECTS (MOBILE FRIENDLY) ---------- */
+  .card:hover,
+  .id-card:hover,
+  .btn:hover,
+  .container:hover {
+    transform: none;
+    box-shadow: var(--soft-shadow);
+  }
+
+  html::before,
+  html::after {
+    filter: blur(40px);
+    opacity: 0.5;
+  }
+}
+
+    /* responsive tweak: reduce heavy effects on smaller screens */
+    @media (max-width: 1000px) {
+
+      .card:hover,
+      .id-card:hover,
+      .container:hover {
+        transform: none;
+        box-shadow: 0 12px 28px rgba(10, 18, 28, 0.06);
+      }
+
+      html::before,
+      html::after {
+        filter: blur(44px);
+        opacity: 0.55;
+      }
+    }
+
+    /* Accessibility: respect reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+
+      html::before,
+      html::after,
+      .card,
+      .btn,
+      .id-card,
+      .timeline .fill,
+      .upload-drop {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .container {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="kyc-wrap">
+
+      <!-- LEFT: Sidebar/timeline -->
+      <div class="left-col" aria-hidden="false">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div
+            style="width:46px;height:46px;border-radius:10px;background:linear-gradient(180deg,#fff,#f8faf7);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(11,17,28,0.04)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#FDE68A" />
+            </svg>
+          </div>
+          <div>
+            <div style="font-weight:800;color:#0b1220">KYC Verification</div>
+            <div style="font-size:13px;color:var(--muted)">Verify your identity and get started</div>
+          </div>
+        </div>
+
+        <div class="steps-list" id="stepsList">
+          <div class="step active" data-step="1" id="stepBtn1" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" fill="#0b1720"
+                  opacity="0.9" />
+              </svg></div>
+            <div>
+              <div class="title">Personal Information</div>
+              <div class="sub">Browse and upload</div>
+            </div>
+          </div>
+
+          <div class="step" data-step="2" id="stepBtn2" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" fill="#0f1724" opacity="0.06" />
+              </svg></div>
+            <div>
+              <div class="title">PAN Details</div>
+              <div class="sub">PAN number & upload</div>
+            </div>
+          </div>
+
+          <div class="step" data-step="3" id="stepBtn3" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21c1.333-4 6-6 9-6s7.667 2 9 6" stroke="#0b1220" stroke-width="1.2" />
+              </svg></div>
+            <div>
+              <div class="title">Bank Details</div>
+              <div class="sub">Account & proof</div>
+            </div>
+          </div>
+
+          <div class="step" data-step="4" id="stepBtn4" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" fill="#0f1724" opacity="0.06" />
+                <path d="M7 8h10M7 12h4" stroke="#0b1220" stroke-width="1.4" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg></div>
+            <div>
+              <div class="title">ID Verification</div>
+              <div class="sub">Choose document type</div>
+            </div>
+          </div>
+
+          <div class="step" data-step="5" id="stepBtn5" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="10" r="3" fill="#0b1220" opacity="0.9" />
+              </svg></div>
+            <div>
+              <div class="title">Selfie</div>
+              <div class="sub">Liveness / signature</div>
+            </div>
+          </div>
+
+          <div class="step" data-step="6" id="stepBtn6" role="button" tabindex="0">
+            <div class="icon-wrap" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="5" width="16" height="14" rx="3" fill="#dff6e9" />
+                <path d="M8 12l2 2 6-6" stroke="#065f46" stroke-width="1.6" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg></div>
+            <div>
+              <div class="title">Review</div>
+              <div class="sub">Submit & finish</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline" aria-hidden="true">
+          <div class="fill" id="timelineFill"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Content / steps -->
+      <div class="right-col">
+        <form action="/kyc/submit-test/" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+          <!-- header -->
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+              <div>
+                <div class="h1" id="stepHeader">Step 1/6 — Personal Information</div>
+                <div class="help" id="stepHelp">Fill the points inside completing the interviewer's personal information
+                </div>
+              </div>
+              <div style="text-align:right;color:var(--muted);font-size:13px">
+                <div>Progress</div>
+                <div id="progressPct" style="font-weight:800;color:#0b1220">0%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 1: Personal -->
+          <div class="card" id="step-1">
+            <div class="row">
+              <div class="col">
+                <label>Full Name</label>
+                <input type="text" name="full_name" required placeholder="Enter full name">
+              </div>
+              <div class="col">
+                <label>Email</label>
+                <input type="email" name="email" id="emailField" required placeholder="name@example.com">
+                <div style="height:8px"></div>
+                <button type="button" id="sendVerifyBtn" class="btn secondary">Verify</button>
+              </div>
+
+            </div>
+
+
+
+            <div class="row" style="margin-top:16px">
+              <div class="col" style="display:flex;gap:8px;align-items:center">
+                <label>Mobile Number</label>
+                <input type="text" name="mobile_number" required placeholder="+91 98765 43210">
+              </div>
+              <div class="col">
+                <label>Business Name</label>
+                <input type="text" name="business_name" required placeholder="Your business / shop name">
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:16px">
+              <div class="col">
+                <label>Business Type</label>
+                <input type="text" name="business_type" required placeholder="Retail / Services / Food / etc">
+              </div>
+              <div class="col">
+                <label>Address</label>
+                <textarea name="address" required placeholder="Full address"></textarea>
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:22px">
+              <div></div>
+              <div>
+                <button type="button" class="btn secondary" id="skipTo2">Save & Next</button>
+                <button type="button" class="btn primary" id="toStep2">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: PAN (separate) -->
+          <div class="card" id="step-2" style="display:none">
+            <label>PAN Details</label>
+            <div style="height:12px"></div>
+            <div class="row">
+              <div class="col">
+                <label>PAN Number</label>
+                <input type="text" name="pan_number" placeholder="ABCDE1234F">
+              </div>
+              <div class="col">
+                <label>PAN Upload</label>
+                <input type="file" name="pan_document" accept="image/*,application/pdf" id="pan_document">
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:18px">
+              <div>
+                <button type="button" class="btn secondary" id="backFrom2">Back</button>
+              </div>
+              <div>
+                <!-- Next will validate & save PAN before moving forward -->
+                <button type="button" class="btn primary" id="toStep3">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: Bank (separate) -->
+          <div class="card" id="step-3" style="display:none">
+            <label>Bank Details</label>
+            <div style="height:12px"></div>
+            <div class="row">
+              <div class="col">
+                <label>Bank Account Number</label>
+                <input type="text" name="bank_account_number" placeholder="Enter account number">
+              </div>
+              <div class="col">
+                <label>IFSC Code</label>
+                <input type="text" name="ifsc_code" placeholder="e.g. SBIN0001234">
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="upload-drop" id="chequeDrop">
+              <div style="font-weight:800;margin-bottom:8px">Click to upload cancelled cheque / bank statement</div>
+              <div class="note">JPEG / PNG / PDF (max 25mb)</div>
+              <input type="file" name="bank_proof" id="bankProof"
+                style="opacity:0;position:relative;z-index:2;margin-top:18px">
+            </div>
+
+            <div class="actions" style="margin-top:18px">
+              <div>
+                <button type="button" class="btn secondary" id="backFrom3">Back</button>
+              </div>
+              <div>
+                <!-- Next will validate & save Bank before moving forward -->
+                <button type="button" class="btn primary" id="toStep4">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4: ID Verification (choose doc type) -->
+          <div class="card" id="step-4" style="display:none">
+            <label>ID Verification — Choose document type</label>
+            <div class="id-grid">
+              <div class="id-card" data-id="idcard">
+                <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="4" width="20" height="16" rx="2" fill="#fff" />
+                    <path d="M7 8h6" stroke="#111827" stroke-width="1.2" stroke-linecap="round" />
+                  </svg></div>
+                <div class="meta">
+                  <div class="t">ID card</div>
+                  <div class="d">Create your account with ID card</div>
+                </div>
+                <div style="width:28px;text-align:right;color:var(--muted)"><svg class="chev" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none">
+                    <path d="M8 9l4 4 4-4" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg></div>
+              </div>
+
+              <div class="id-card" data-id="dl">
+                <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="4" width="20" height="16" rx="2" fill="#fff" />
+                    <path d="M6 8h8" stroke="#111827" stroke-width="1.2" />
+                  </svg></div>
+                <div class="meta">
+                  <div class="t">Driving License</div>
+                  <div class="d">Create your account with Driving license</div>
+                </div>
+                <div style="width:28px;text-align:right;color:var(--muted)"><svg class="chev" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none">
+                    <path d="M8 9l4 4 4-4" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg></div>
+              </div>
+
+              <div class="id-card" data-id="pp">
+                <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="4" width="20" height="16" rx="2" fill="#fff" />
+                    <path d="M6 8h10" stroke="#111827" stroke-width="1.2" />
+                  </svg></div>
+                <div class="meta">
+                  <div class="t">Passport</div>
+                  <div class="d">Create your account with Passport</div>
+                </div>
+                <div style="width:28px;text-align:right;color:var(--muted)"><svg class="chev" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none">
+                    <path d="M8 9l4 4 4-4" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg></div>
+              </div>
+            </div>
+
+            <div id="idExpand" style="margin-top:12px"></div>
+
+            <div class="actions" style="margin-top:18px">
+              <div><button type="button" class="btn secondary" id="backFrom4">Back</button></div>
+              <div><button type="button" class="btn primary" id="toStep5">Next</button></div>
+            </div>
+          </div>
+
+          <!-- STEP 5: Selfie / signature -->
+          <div class="card" id="step-5" style="display:none">
+            <label>Selfie & Signature</label>
+            <div style="height:12px"></div>
+            <div class="row">
+              <div class="col">
+                <label>Selfie (optional)</label>
+                <input type="file" name="selfie" accept="image/*">
+              </div>
+              <div class="col">
+                <label>Signature (optional)</label>
+                <input type="file" name="signature" accept="image/*">
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="actions">
+              <div><button type="button" class="btn secondary" id="backFrom5">Back</button></div>
+              <div><button type="button" class="btn primary" id="toStep6">Next</button></div>
+            </div>
+          </div>
+
+          <!-- STEP 6: Review & Submit -->
+          <div class="card" id="step-6" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="h1">Review & Submit</div>
+                <div class="help">All fields collected for Test Mode. Submit will save files; verification can be added
+                  later.</div>
+                <div style="margin-top:8px;font-size:13px;color:var(--muted)">You can edit any step by clicking sidebar.
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:13px;color:var(--muted)">Estimated time</div>
+                <div style="font-weight:800;font-size:18px">~2 min</div>
+              </div>
+            </div>
+
+            <div style="height:14px"></div>
+
+            <div style="display:flex;gap:12px;align-items:center">
+              <button type="button" class="btn secondary" id="backFrom6">Back</button>
+<button type="button" class="btn primary" id="previewBtn">Submiyt KYC</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Step control + top->down timeline progress */
+    (function () {
+      const steps = Array.from(document.querySelectorAll('.step'));
+      const timelineFill = document.getElementById('timelineFill');
+      const progressPct = document.getElementById('progressPct');
+      const stepHeader = document.getElementById('stepHeader');
+      const stepHelp = document.getElementById('stepHelp');
+
+      let current = 1;
+      const total = 6;
+
+      function goTo(n) {
+        if (n < 1) n = 1; if (n > total) n = total;
+        current = n;
+        for (let i = 1; i <= total; i++) {
+          const el = document.getElementById('step-' + i);
+          if (el) el.style.display = (i === n) ? 'block' : 'none';
+          const btn = document.querySelector('.step[data-step="' + i + '"]');
+          if (btn) {
+            btn.classList.remove('active', 'completed');
+            if (i < n) btn.classList.add('completed');
+            if (i === n) btn.classList.add('active');
+          }
+        }
+        const pct = Math.round(((n - 1) / (total - 1)) * 100);
+        timelineFill.style.height = pct + '%';
+        progressPct.textContent = pct + '%';
+
+        const titles = {
+          1: ["Step 1/6 — Personal Information", "Fill the points inside completing the interviewer's personal information"],
+          2: ["Step 2/6 — PAN Details", "Provide PAN number and upload PAN document"],
+          3: ["Step 3/6 — Bank Details", "Provide account number, IFSC and upload bank proof"],
+          4: ["Step 4/6 — ID Verification", "Select a document type and upload ID images"],
+          5: ["Step 5/6 — Selfie", "Upload a selfie and signature (optional in Test Mode)"],
+          6: ["Step 6/6 — Review & Submit", "Review details and submit for Test Mode storage"]
+        };
+
+        stepHeader.textContent = titles[n][0];
+        stepHelp.textContent = titles[n][1];
+      }
+
+      goTo(1);
+
+      steps.forEach(s => {
+        s.addEventListener('click', () => goTo(parseInt(s.dataset.step)));
+        s.addEventListener('keydown', (e) => { if (e.key === 'Enter') goTo(parseInt(s.dataset.step)); });
+      });
+
+      // navigation wiring
+      document.getElementById('toStep2').addEventListener('click', () => goTo(2));
+      document.getElementById('toStep3').addEventListener('click', () => goTo(3));
+      document.getElementById('toStep4').addEventListener('click', () => goTo(4));
+      document.getElementById('toStep5').addEventListener('click', () => goTo(5));
+      document.getElementById('toStep6').addEventListener('click', () => goTo(6));
+
+      // back buttons
+      document.getElementById('backFrom2').addEventListener('click', () => goTo(1));
+      document.getElementById('backFrom3').addEventListener('click', () => goTo(2));
+      document.getElementById('backFrom4').addEventListener('click', () => goTo(3));
+      document.getElementById('backFrom5').addEventListener('click', () => goTo(4));
+      document.getElementById('backFrom6').addEventListener('click', () => goTo(5));
+
+      // quick save/skip
+      document.getElementById('skipTo2')?.addEventListener('click', () => goTo(2));
+
+      // top-left step clicks
+      for (let i = 1; i <= 6; i++) {
+        const btn = document.getElementById('stepBtn' + i);
+        if (btn) btn.addEventListener('click', () => goTo(i));
+      }
+    })();
+  </script>
+
+  <script>
+    /* ID card selection + expand (unchanged) */
+    (function () {
+      const cards = document.querySelectorAll('.id-card');
+      const expandTarget = document.getElementById('idExpand');
+
+      function renderExpand(id) {
+        if (!id) { expandTarget.innerHTML = ''; return; }
+        if (id === 'idcard') {
+          expandTarget.innerHTML = `
+        <div style="padding:14px;border-radius:12px;border:1px solid rgba(11,17,28,0.04);background:#fff;margin-top:6px">
+          <div style="font-weight:800">ID Card — Upload front & back</div>
+          <div style="height:12px"></div>
+          <div class="row">
+            <div class="col"><label>Front Image</label><input type="file" name="id_front" accept="image/*"></div>
+            <div class="col"><label>Back Image</label><input type="file" name="id_back" accept="image/*"></div>
+          </div>
+          <div style="height:10px"></div>
+          <label>ID Number</label><input type="text" name="id_number" placeholder="ID number (as on document)">
+          <div class="note">Make sure the image is clear and all corners visible.</div>
+        </div>`;
+        } else if (id === 'dl') {
+          expandTarget.innerHTML = `
+        <div style="padding:14px;border-radius:12px;border:1px solid rgba(11,17,28,0.04);background:#fff;margin-top:6px">
+          <div style="font-weight:800">Driving License — Upload</div>
+          <div style="height:12px"></div>
+          <label>Driving License Image</label><input type="file" name="dl_image" accept="image/*">
+          <div style="height:10px"></div>
+          <label>DL Number</label><input type="text" name="dl_number" placeholder="DL number">
+          <div class="note">Enter the number exactly as displayed.</div>
+        </div>`;
+        } else if (id === 'pp') {
+          expandTarget.innerHTML = `
+        <div style="padding:14px;border-radius:12px;border:1px solid rgba(11,17,28,0.04);background:#fff;margin-top:6px">
+          <div style="font-weight:800">Passport — Upload</div>
+          <div style="height:12px"></div>
+          <label>Passport Scan (photo page)</label><input type="file" name="passport_image" accept="image/*">
+          <div style="height:12px"></div>
+          <label>Passport Number</label><input type="text" name="passport_number" placeholder="Passport number">
+          <div class="note">Ensure passport page is readable (MRZ not required in Test Mode).</div>
+        </div>`;
+        }
+      }
+
+      cards.forEach(c => {
+        c.addEventListener('click', () => {
+          cards.forEach(x => x.classList.remove('selected'));
+          c.classList.add('selected');
+          const id = c.getAttribute('data-id');
+          renderExpand(id);
+        });
+      });
+
+    })();
+  </script>
+
+  <script>
+    /* bank upload drag/drop UX */
+    (function () {
+      const drop = document.getElementById('chequeDrop');
+      const fileInput = document.getElementById('bankProof');
+      if (!drop) return;
+      drop.addEventListener('click', () => fileInput.click());
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('drag'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault(); drop.classList.remove('drag');
+        const f = (e.dataTransfer.files && e.dataTransfer.files[0]);
+        if (f) { fileInput.files = e.dataTransfer.files; drop.querySelector('.note').textContent = f.name; }
+      });
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) drop.querySelector('.note').textContent = fileInput.files[0].name;
+      });
+    })();
+
+    /* === CSRF helper === */
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    /* === UI helpers - adjust selectors to your markup === */
+    function showToast(msg, ms = 3000) {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      Object.assign(el.style, { position: 'fixed', right: '18px', bottom: '18px', background: '#111', color: '#fff', padding: '10px 14px', borderRadius: '8px', zIndex: 99999 });
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), ms);
+    }
+
+    /* === send verification === */
+    async function sendEmailVerification() {
+      try {
+        const btn = document.getElementById('sendVerifyBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+        const resp = await fetch('/send-email-verification/', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json'
+          }
+        });
+        const j = await resp.json();
+        if (!resp.ok) {
+          showToast(j.error || 'Failed to send verification. Try again.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Send verification'; }
+          return;
+        }
+        showToast('Verification email sent. Check your inbox.');
+        startEmailPolling();
+
+        setTimeout(() => {
+          if (btn) { btn.disabled = false; btn.textContent = 'Send verification'; }
+        }, 60000);
+      } catch (err) {
+        console.error(err);
+        showToast('Network error while sending verification.');
+        const btn = document.getElementById('sendVerifyBtn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send verification'; }
+      }
+    }
+
+    /* === Polling for status (fallback for cross-device clicks) === */
+    function startEmailPolling(interval = 5000, maxChecks = 24) {
+      let count = 0;
+      const pid = setInterval(async () => {
+        count++;
+        try {
+          const r = await fetch('/api/email-status/', { method: 'GET', headers: { 'Accept': 'application/json' } });
+          const json = await r.json();
+          if (json.email_verified) {
+            clearInterval(pid);
+            onEmailVerified();
+          }
+        } catch (e) {
+          console.error('poll error', e);
+        }
+        if (count >= maxChecks) clearInterval(pid);
+      }, interval);
+    }
+
+    function onEmailVerified() {
+      showToast('Email verified ✅');
+      setEmailVerifiedUI();
+    }
+
+    function setEmailVerifiedUI() {
+      const emailInput = document.querySelector('input[name="email"]');
+      if (!emailInput) return;
+      emailInput.dataset.verified = "1";
+      emailInput.style.borderColor = '#10b981';
+      if (!document.getElementById('email-verified-tick')) {
+        const tick = document.createElement('span');
+        tick.id = 'email-verified-tick';
+        tick.textContent = ' ✓';
+        tick.style.color = '#10b981';
+        tick.style.fontWeight = '700';
+        tick.style.marginLeft = '8px';
+        emailInput.parentNode.appendChild(tick);
+      }
+      const btn = document.getElementById('sendVerifyBtn');
+      if (btn) btn.style.display = 'none';
+    }
+
+    function clearEmailVerifiedUI() {
+      const tick = document.getElementById('email-verified-tick');
+      if (tick) tick.remove();
+      const emailInput = document.querySelector('input[name="email"]');
+      if (emailInput) emailInput.style.borderColor = '';
+      const btn = document.getElementById('sendVerifyBtn');
+      if (btn) btn.style.display = 'block';
+    }
+
+    // alias for older references in code
+    const applyEmailVerifiedUI = setEmailVerifiedUI;
+
+    (function detectRedirectParam() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('email_verified') === '1') {
+        fetch('/api/email-status/', { method: 'GET', headers: { 'Accept': 'application/json' } })
+          .then(r => r.json())
+          .then(j => { if (j.email_verified) onEmailVerified(); })
+          .catch(() => { /* ignore */ });
+        history.replaceState(null, '', window.location.pathname + window.location.hash);
+      }
+    })();
+
+    /* === Main form validation + save logic (full improved UX) === */
+    (function () {
+      // endpoints (adjust to your backend)
+      const API_GET = '/api/kyc/personal/';
+      const API_SAVE = '/api/kyc/personal/save/';
+      const API_SAVE_PAN = '/api/kyc/pan/save/';
+      const API_SAVE_BANK = '/api/kyc/bank/save/';
+      const API_SUBMIT = '/api/kyc/submit/';
+      const EMAIL_STATUS = '/api/email-status/';
+
+      const form = document.querySelector('form');
+      if (!form) return console.warn("KYC form not found");
+
+      // PERSONAL fields
+      const fields = {
+        full_name: form.querySelector('input[name="full_name"]'),
+        email: form.querySelector('input[name="email"]'),
+        mobile_number: form.querySelector('input[name="mobile_number"]'),
+        business_name: form.querySelector('input[name="business_name"]'),
+        business_type: form.querySelector('input[name="business_type"]'),
+        address: form.querySelector('textarea[name="address"]'),
+      };
+
+      // PAN fields
+      const panField = form.querySelector('input[name="pan_number"]');
+      const panFile = document.getElementById('pan_document');
+
+      // BANK fields
+      const bankAccField = form.querySelector('input[name="bank_account_number"]');
+      const ifscField = form.querySelector('input[name="ifsc_code"]');
+      const bankProofFile = document.getElementById('bankProof');
+
+      const saveBtn = document.getElementById('skipTo2'); // Save & Next (personal)
+      const nextBtn = document.getElementById('toStep2'); // Next (personal)
+
+      // regexes
+      const NAME_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ'-. ]{2,120}$/;
+      const MOBILE_RE = /^\+?\d{7,15}$/;
+      const BUSINESS_RE = /^[A-Za-z0-9&\.\-,/ ]{2,150}$/;
+      // PAN: 5 letters, 4 digits, 1 letter (uppercase typically)
+      const PAN_RE = /^[A-Z]{5}\d{4}[A-Z]$/i;
+      // Bank account: digits only (common) - accept 6 to 20 digits
+      const ACC_RE = /^\d{6,20}$/;
+      // IFSC: 4 letters, 0, 6 alnum
+      const IFSC_RE = /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/;
+
+      // helpers for errors UI
+      function createErrorEl(afterEl) {
+        let next = afterEl.nextElementSibling;
+        if (next && next.classList && next.classList.contains('error-msg')) return next;
+        const span = document.createElement('span');
+        span.className = 'error-msg';
+        span.textContent = '';
+        afterEl.parentNode.insertBefore(span, afterEl.nextSibling);
+        return span;
+      }
+
+      function clearFieldError(el) {
+        if (!el) return;
+        el.classList.remove('input-error');
+        const next = el.nextElementSibling;
+        if (next && next.classList && next.classList.contains('error-msg')) next.textContent = '';
+      }
+
+      function setFieldError(el, msg) {
+        if (!el) return;
+        el.classList.add('input-error');
+        const err = createErrorEl(el);
+        err.textContent = msg;
+      }
+
+      function disableButtons(state) {
+        if (saveBtn) { saveBtn.disabled = !!state; }
+        if (nextBtn) { nextBtn.disabled = !!state; }
+      }
+
+      // validation logic (pure) - personal
+      function validateAll() {
+        const errors = {};
+        const name = (fields.full_name.value || '').trim();
+        const email = (fields.email.value || '').trim();
+        const mobile = (fields.mobile_number.value || '').trim();
+        const business = (fields.business_name.value || '').trim();
+        const address = (fields.address.value || '').trim();
+
+        if (!name || !NAME_RE.test(name)) {
+          errors.full_name = "Enter a valid name (letters & spaces only, min 2 chars).";
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errors.email = "Enter a valid email address.";
+        }
+        if (!mobile || !MOBILE_RE.test(mobile)) {
+          errors.mobile_number = "Enter a valid mobile (7–15 digits, optional '+').";
+        }
+        if (!business || !BUSINESS_RE.test(business)) {
+          errors.business_name = "Enter a valid business name (letters, numbers, &-.,/ allowed).";
+        }
+        if (!address || address.length < 8 || address.split(/\s+/).length < 2) {
+          errors.address = "Enter a valid address (at least two words).";
+        }
+
+        return errors;
+      }
+
+      // PAN validation (pure)
+      function validatePan() {
+        const errors = {};
+        const pan = (panField?.value || '').trim();
+        if (!pan || !PAN_RE.test(pan)) {
+          errors.pan_number = "Enter a valid PAN (format: 5 letters, 4 digits, 1 letter).";
+        }
+        if (!panFile || !panFile.files || panFile.files.length === 0) {
+          errors.pan_document = "Upload PAN document (image/pdf).";
+        }
+        return errors;
+      }
+
+      // Bank validation (pure)
+      function validateBank() {
+        const errors = {};
+        const acc = (bankAccField?.value || '').trim();
+        const ifsc = (ifscField?.value || '').trim();
+        if (!acc || !ACC_RE.test(acc)) {
+          errors.bank_account_number = "Enter valid account number (6–20 digits).";
+        }
+        if (!ifsc || !IFSC_RE.test(ifsc)) {
+          errors.ifsc_code = "Enter valid IFSC (e.g. SBIN0001234).";
+        }
+        if (!bankProofFile || !bankProofFile.files || bankProofFile.files.length === 0) {
+          errors.bank_proof = "Upload cancelled cheque or bank statement.";
+        }
+        return errors;
+      }
+
+      // touched map -> only show visual errors after user interacts
+      const touched = {};
+      Object.keys(fields).forEach(k => touched[k] = false);
+
+      function showErrors(errors, showAll = false) {
+        // personal fields
+        Object.keys(fields).forEach(k => {
+          const el = fields[k];
+          const shouldShow = showAll || touched[k];
+          if (errors[k]) {
+            if (shouldShow) setFieldError(el, errors[k]);
+            else clearFieldError(el);
+          } else {
+            clearFieldError(el);
+          }
+        });
+        // pan errors
+        if (errors.pan_number) setFieldError(panField, errors.pan_number); else clearFieldError(panField);
+        if (errors.pan_document) {
+          // show under file input
+          createErrorEl(panFile).textContent = errors.pan_document;
+        } else {
+          const next = panFile?.nextElementSibling;
+          if (next && next.classList && next.classList.contains('error-msg')) next.textContent = '';
+        }
+        // bank errors
+        if (errors.bank_account_number) setFieldError(bankAccField, errors.bank_account_number); else clearFieldError(bankAccField);
+        if (errors.ifsc_code) setFieldError(ifscField, errors.ifsc_code); else clearFieldError(ifscField);
+        if (errors.bank_proof) {
+          createErrorEl(bankProofFile).textContent = errors.bank_proof;
+        } else {
+          const next = bankProofFile?.nextElementSibling;
+          if (next && next.classList && next.classList.contains('error-msg')) next.textContent = '';
+        }
+      }
+
+      // debounce helper
+      function debounce(fn, wait = 300) {
+        let t = null;
+        return function (...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }
+      }
+
+      function validateAndUpdate(forceShowAll = false) {
+        const errs = validateAll();
+        showErrors(errs, !!forceShowAll);
+        const hasErrors = Object.keys(errs).length > 0;
+        disableButtons(hasErrors);
+        return { errs, hasErrors };
+      }
+
+      const debouncedValidate = debounce(() => validateAndUpdate(false), 220);
+
+      Object.keys(fields).forEach(k => {
+        const el = fields[k];
+        if (!el) return;
+        el.addEventListener('input', debouncedValidate);
+        el.addEventListener('change', debouncedValidate);
+        el.addEventListener('blur', () => { touched[k] = true; validateAndUpdate(false); });
+        el.addEventListener('focus', () => clearFieldError(el));
+      });
+
+      // inline send verification wiring
+      function ensureInlineVerifyBtn() {
+        const existing = document.getElementById('sendVerifyBtn');
+        if (existing) { existing.addEventListener('click', sendEmailVerification); return; }
+        if (document.getElementById('inlineSendVerify')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'inlineSendVerify';
+        btn.className = 'btn secondary';
+        btn.textContent = 'Send verification';
+        btn.style.display = 'block';
+        btn.style.marginTop = '8px';
+        const emailCol = fields.email.parentNode;
+        emailCol.appendChild(btn);
+        btn.addEventListener('click', sendEmailVerification);
+      }
+
+      // Lock/readonly helpers
+      function setReadonlyForInputs(container, readOnly) {
+        if (!container) return;
+        const inputs = container.querySelectorAll('input[type="text"], input[type="email"], textarea');
+        inputs.forEach(i => { i.readOnly = !!readOnly; if (readOnly) i.classList.remove('input-error'); });
+        const fileInputs = container.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(f => { f.disabled = !!readOnly; });
+      }
+
+      // personal Save & Next handler
+      async function handleSaveAndNext(ev) {
+        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+        const { errs, hasErrors } = validateAndUpdate(true); // show all on save
+        if (hasErrors) { showToast('Please fix the errors before saving.'); return; }
+
+        const payload = {
+          full_name: fields.full_name.value.trim(),
+          email: fields.email.value.trim(),
+          mobile_number: fields.mobile_number.value.trim(),
+          business_name: fields.business_name.value.trim(),
+          business_type: fields.business_type.value.trim(),
+          address: fields.address.value.trim()
+        };
+
+        try {
+          const r = await fetch(API_SAVE, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken, 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const j = await r.json();
+          if (!r.ok) {
+            if (j.errors) { showErrors(j.errors, true); showToast('Fix the highlighted fields.'); }
+            else { showToast(j.error || 'Save failed.'); }
+            return;
+          }
+          showToast('Saved personal information.');
+          // lock personal fields as readonly but keep Edit button for personal only
+          lockPersonalFields(true);
+
+          if (j.data && j.data.email_verified) applyEmailVerifiedUI();
+          else clearEmailVerifiedUI();
+        } catch (err) {
+          console.error(err);
+          showToast('Network error saving.');
+        }
+      }
+
+      // PAN save handler (called when clicking Next on PAN step)
+      async function handleSavePan() {
+        const errs = validatePan();
+        showErrors(errs, true);
+        if (Object.keys(errs).length) { showToast('Fix PAN errors before continuing.'); return false; }
+
+        // build FormData to include file
+        const fd = new FormData();
+        fd.append('pan_number', panField.value.trim());
+        if (panFile.files.length) fd.append('pan_document', panFile.files[0]);
+
+        try {
+          const r = await fetch(API_SAVE_PAN, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrftoken }, // do not set Content-Type so browser sets multipart
+            body: fd
+          });
+          const j = await r.json();
+          if (!r.ok) {
+            if (j.errors) {
+              showErrors(j.errors, true);
+              showToast('Fix highlighted PAN fields.');
+            } else showToast(j.error || 'PAN save failed.');
+            return false;
+          }
+          showToast('PAN saved.');
+          // make PAN fields readonly/disabled (no edit allowed per request)
+          setReadonlyForInputs(document.getElementById('step-2'), true);
+          return true;
+        } catch (err) {
+          console.error(err);
+          showToast('Network error saving PAN.');
+          return false;
+        }
+      }
+
+      // Bank save handler (called when clicking Next on Bank step)
+      async function handleSaveBank() {
+        const errs = validateBank();
+        showErrors(errs, true);
+        if (Object.keys(errs).length) { showToast('Fix bank errors before continuing.'); return false; }
+
+        const fd = new FormData();
+        fd.append('bank_account_number', bankAccField.value.trim());
+        fd.append('ifsc_code', ifscField.value.trim());
+        if (bankProofFile.files.length) fd.append('bank_proof', bankProofFile.files[0]);
+
+        try {
+          const r = await fetch(API_SAVE_BANK, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrftoken },
+            body: fd
+          });
+          const j = await r.json();
+          if (!r.ok) {
+            if (j.errors) {
+              showErrors(j.errors, true);
+              showToast('Fix highlighted bank fields.');
+            } else showToast(j.error || 'Bank save failed.');
+            return false;
+          }
+          showToast('Bank details saved.');
+          // make bank inputs readonly/disabled (no edit allowed)
+          setReadonlyForInputs(document.getElementById('step-3'), true);
+          return true;
+        } catch (err) {
+          console.error(err);
+          showToast('Network error saving bank details.');
+          return false;
+        }
+      }
+
+      // Lock / Unlock personal fields + Edit button management (personal only)
+      let personalEditBtn = null;
+      function lockPersonalFields(locked) {
+        Object.keys(fields).forEach(k => {
+          const el = fields[k];
+          if (!el) return;
+          // readonly so browsers include values in form submission
+          el.readOnly = !!locked;
+          if (locked) el.classList.remove('input-error');
+        });
+        if (!personalEditBtn) {
+          personalEditBtn = document.createElement('button');
+          personalEditBtn.type = 'button';
+          personalEditBtn.className = 'btn secondary';
+          personalEditBtn.textContent = 'Edit';
+          const actions = document.querySelector('#step-1 .actions div:last-child') || document.querySelector('#step-1 .actions');
+          if (actions) actions.prepend(personalEditBtn);
+          personalEditBtn.addEventListener('click', () => {
+            lockPersonalFields(false);
+            personalEditBtn.style.display = 'none';
+            try { fields.full_name.focus(); } catch (e) { }
+          });
+        }
+        if (personalEditBtn) personalEditBtn.style.display = locked ? 'inline-block' : 'none';
+      }
+
+      // init
+      async function init() {
+        ensureInlineVerifyBtn();
+
+        // run initial validators and wire Save & Next for personal
+        if (saveBtn) {
+          saveBtn.addEventListener('click', (e) => {
+            const { hasErrors } = validateAndUpdate(false);
+            if (hasErrors) {
+              validateAndUpdate(true);
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              showToast('Please fix errors before continuing.');
+              return;
+            }
+            // valid -> start saving in background
+            handleSaveAndNext();
+            // original goTo listener will run afterwards
+          }, { capture: true });
+        }
+
+        if (nextBtn) {
+          nextBtn.addEventListener('click', (e) => {
+            const { hasErrors } = validateAndUpdate(false);
+            if (hasErrors) {
+              validateAndUpdate(true);
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              showToast('Please fix errors before continuing.');
+            }
+          }, { capture: true });
+        }
+
+        // wire PAN Next to validate & save before moving to bank
+        document.getElementById('toStep3').addEventListener('click', async (e) => {
+          // try to save PAN; if ok go to step 3 else block
+          const ok = await handleSavePan();
+          if (ok) goTo(3);
+        });
+
+        // wire BANK Next to validate & save before moving to ID
+        document.getElementById('toStep4').addEventListener('click', async (e) => {
+          const ok = await handleSaveBank();
+          if (ok) goTo(4);
+        });
+
+        // load saved personal info
+        try {
+          const r = await fetch(API_GET, { credentials: 'same-origin' });
+          const j = await r.json();
+          if (j.exists && j.data) {
+            const d = j.data;
+            fields.full_name.value = d.full_name || '';
+            fields.email.value = d.email || '';
+            fields.mobile_number.value = d.mobile_number || '';
+            fields.business_name.value = d.business_name || '';
+            fields.business_type.value = d.business_type || '';
+            fields.address.value = d.address || '';
+            // keep personal readonly if saved
+            lockPersonalFields(true);
+            if (d.email_verified) applyEmailVerifiedUI();
+            else clearEmailVerifiedUI();
+          } else {
+            lockPersonalFields(false);
+            clearEmailVerifiedUI();
+          }
+        } catch (err) {
+          console.error('init fetch error', err);
+        }
+
+        // run validation initial to set button states but do NOT show visual errors
+        validateAndUpdate(false);
+
+        // handle redirect param for email verification
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('email_verified') === '1') {
+          try {
+            const r = await fetch(EMAIL_STATUS, { credentials: 'same-origin' });
+            const j = await r.json();
+            if (j.email_verified) {
+              applyEmailVerifiedUI();
+              lockPersonalFields(true);
+            }
+          } catch (_) { }
+          history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+
+        // ensure final submit won't accidentally remove readonly state — readonly fields are submitted, so we do nothing.
+
+        (function () {
+          // API_SUBMIT constant assumed to be defined earlier in your script:
+          // const API_SUBMIT = '/api/kyc/submit/';
+          // and csrftoken variable already defined.
+          
+  const form          = document.querySelector('form[action="/kyc/submit-test/"]') || document.querySelector('form');
+  const previewBtn    = document.getElementById('previewBtn');
+  const modal         = document.getElementById('previewModal');
+  const previewBody   = document.getElementById('previewBody');
+  const cancelBtn     = document.getElementById('previewCancel');
+  const confirmBtn    = document.getElementById('previewConfirm');
+
+  if (!form || !previewBtn || !modal) return;
+
+  function row(label, value) {
+    return `
+      <div class="preview-row">
+        <div class="preview-label">${label}</div>
+        <div class="preview-value">${value ? value : '-'}</div>
+      </div>`;
+  }
+
+  function openPreview() {
+    // basic text values
+    const data = {
+      'Full Name'       : form.full_name?.value,
+      'Email'           : form.email?.value,
+      'Mobile Number'   : form.mobile_number?.value,
+      'Business Name'   : form.business_name?.value,
+      'Business Type'   : form.business_type?.value,
+      'Address'         : form.address?.value,
+      'PAN Number'      : form.pan_number?.value,
+      'Bank A/C Number' : form.bank_account_number?.value,
+      'IFSC Code'       : form.ifsc_code?.value,
+      'ID Number'       : (form.id_number?.value || form.dl_number?.value || form.passport_number?.value || '')
+    };
+
+    // file names (just show file name, not file itself)
+    const files = {
+      'PAN Document'    : form.pan_document?.files[0]?.name,
+      'Bank Proof'      : form.bank_proof?.files[0]?.name,
+      'Selfie'          : form.selfie?.files[0]?.name,
+      'Signature'       : form.signature?.files[0]?.name
+    };
+
+    let html = '';
+
+    html += '<h4 style="margin:0 0 8px;">Personal</h4>';
+    html += row('Full Name', data['Full Name']);
+    html += row('Email', data['Email']);
+    html += row('Mobile Number', data['Mobile Number']);
+    html += row('Business Name', data['Business Name']);
+    html += row('Business Type', data['Business Type']);
+    html += row('Address', data['Address']);
+
+    html += '<hr style="margin:10px 0;border:none;border-top:1px solid #e5e7eb;">';
+    html += '<h4 style="margin:0 0 8px;">PAN & Bank</h4>';
+    html += row('PAN Number', data['PAN Number']);
+    html += row('PAN Document', files['PAN Document']);
+    html += row('Bank A/C Number', data['Bank A/C Number']);
+    html += row('IFSC Code', data['IFSC Code']);
+    html += row('Bank Proof', files['Bank Proof']);
+
+    html += '<hr style="margin:10px 0;border:none;border-top:1px solid #e5e7eb;">';
+    html += '<h4 style="margin:0 0 8px;">ID & Selfie</h4>';
+    html += row('ID Number', data['ID Number']);
+    html += row('Selfie', files['Selfie']);
+    html += row('Signature', files['Signature']);
+
+    previewBody.innerHTML = html;
+    modal.style.display = 'flex';
+  }
+
+  previewBtn.addEventListener('click', function () {
+    console.log("Coming preview ")
+    openPreview();
+  });
+
+  cancelBtn.addEventListener('click', function () {
+    modal.style.display = 'none';
+  });
+
+  // Actually submit the form when user confirms
+  confirmBtn.addEventListener('click', function () {
+    modal.style.display = 'none';
+    form.submit();
+  });
+
+  // close on backdrop click
+  modal.querySelector('.preview-backdrop').addEventListener('click', function () {
+    modal.style.display = 'none';
+  });
+
+          const DASHBOARD_URL = '/vpay_dashboard/';
+          //const form = document.querySelector('form');
+          if (!form) return;
+
+          // helper for errors from server
+          function handleServerErrors(json) {
+            if (!json) return;
+            if (json.errors) {
+              // display field errors where possible
+              Object.keys(json.errors).forEach(key => {
+                const el = form.querySelector(`[name="${key}"]`);
+                if (el) {
+                  let next = el.nextElementSibling;
+                  if (!next || !next.classList || !next.classList.contains('error-msg')) {
+                    const span = document.createElement('span');
+                    span.className = 'error-msg';
+                    el.parentNode.insertBefore(span, el.nextSibling);
+                    next = span;
+                  }
+                  next.textContent = json.errors[key];
+                  el.classList.add('input-error');
+                }
+              });
+            }
+          }
+
+          form.addEventListener('submit', async function (ev) {
+            console.log("giu")
+            ev.preventDefault();
+            // small UI guard
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; }
+
+            try {
+              // Build FormData from form (includes file inputs)
+              const fd = new FormData(form);
+
+              const resp = await fetch(API_SUBMIT, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                  'X-CSRFToken': csrftoken,
+                  'Accept': 'application/json'
+                  // NOTE: do NOT set Content-Type when sending FormData
+                },
+                body: fd,
+              });
+
+              const json = await (resp.headers.get('Content-Type') || '').includes('application/json') ? resp.json() : {};
+
+              if (!resp.ok) {
+                // show server errors inline (if any) and toast
+                handleServerErrors(json);
+                showToast(json.error || 'Submission failed. Please check the highlighted fields.');
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit KYC'; }
+                return;
+              }
+
+              // success - server can optionally return { redirect: "/dashboard/" } or { message: "...", id: 123 }
+              showToast(json.message || 'KYC submitted. Redirecting to dashboard...', 3000);
+
+              // Give UX a short delay so user sees the toast, then redirect.
+              setTimeout(() => {
+                // prefer server-provided redirect
+                if (json && json.redirect) {
+                  window.location.href = json.redirect;
+                  return;
+                }
+                // default dashboard path (change if your route differs)
+                window.location.href = DASHBOARD_URL;
+              }, 900);
+
+            } catch (err) {
+              console.error('Submit error', err);
+              showToast('Network error submitting KYC. Try again.');
+              if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit KYC'; }
+            }
+          });
+        })();
+
+
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+    })();
+
+
+
+
+  </script>
+<!-- Preview Popup -->
+<div id="previewModal" class="preview-modal" style="display:none;">
+  <div class="preview-backdrop"></div>
+  <div class="preview-box">
+    <h3 style="margin:0 0 10px;">Review your details</h3>
+    <p style="margin:0 0 16px;font-size:13px;color:#6b7280">
+      Please check all details before submitting your KYC.
+    </p>
+
+    <div id="previewBody"></div>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="btn secondary" id="previewCancel">Edit</button>
+      <button type="button" class="btn primary" id="previewConfirm">Confirm & Submit</button>
+    </div>
+  </div>
+</div>
+
+</body>
+
+</html>

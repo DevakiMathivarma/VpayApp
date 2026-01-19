@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Verification failed</title></head>
+<body>
+  <h2>Email verification failed</h2>
+  {% if reason == 'expired' %}
+    <p>Your verification link has expired. <a href="/kyc">Click here to resend verification</a>.</p>
+  {% else %}
+    <p>The verification link is invalid or already used. <a href="/kyc">Resend verification</a>.</p>
+  {% endif %}
+</body>
+</html>

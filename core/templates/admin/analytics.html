@@ -1,0 +1,932 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}VPay Analytics Dashboard{% endblock %}
+
+{% block extrastyle %}
+<style>
+  :root{
+    --bg-gradient: linear-gradient(135deg,#0f172a,#020617);
+    --card-bg: rgba(15,23,42,0.96);
+    --card-border: rgba(148,163,184,0.25);
+    --accent: #4f46e5;
+    --accent-soft: rgba(79,70,229,0.15);
+    --accent-2: #22c55e;
+    --danger: #ef4444;
+    --warning: #f97316;
+    --text-main: #e5e7eb;
+    --text-muted: #9ca3af;
+    --radius-lg: 18px;
+    --shadow-soft: 0 18px 40px rgba(15,23,42,0.55);
+  }
+
+  body {
+    background: var(--bg-gradient);
+  }
+
+  /* container */
+  .analytics-shell {
+    margin: -20px -20px 0 -20px;
+    padding: 18px 22px 40px 22px;
+   background: radial-gradient(circle at 20% 20%, #fffecf 0%, #fff4b8 20%, transparent 60%),
+                radial-gradient(circle at 80% 80%, #ffcab8 0%, #ffb4a2 30%, transparent 70%),
+                radial-gradient(circle at 50% 50%, #ffe3a3 0%, #ffd59f 40%, #ffc3a0 70%, #ffb3a7 100%);
+    min-height: calc(100vh - 50px);
+    animation: bgPulse 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgPulse {
+    0% { background-position: 0 0, 100% 100%; }
+    100% { background-position: 12% 4%, 88% 96%; }
+  }
+
+  .analytics-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    .analytics-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* animated sidebar */
+  .analytics-sidebar {
+    background: linear-gradient(145deg,rgba(15,23,42,0.95),rgba(15,23,42,0.8));
+    border-radius: 24px;
+    border: 1px solid rgba(148,163,184,0.35);
+    box-shadow: var(--shadow-soft);
+    padding: 20px 20px 18px;
+    color: var(--text-main);
+    position: relative;
+    overflow: hidden;
+    transform-origin: left center;
+    animation: slideInLeft 0.7s cubic-bezier(.16,.8,.32,1.2) forwards;
+  }
+
+  .sidebar-glow {
+    position:absolute;
+    inset:-60px;
+    background:
+      radial-gradient(circle at top,rgba(59,130,246,0.16),transparent 60%),
+      radial-gradient(circle at bottom,rgba(16,185,129,0.16),transparent 60%);
+    opacity:.8;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+
+  @keyframes slideInLeft {
+    from { transform: translateX(-40px) scale(.96); opacity: 0; }
+    to   { transform: translateX(0) scale(1); opacity: 1; }
+  }
+
+  /* sidebar header */
+  .sb-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .sb-title {
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .sb-logo {
+    width:34px;
+    height:34px;
+    border-radius:14px;
+    background: radial-gradient(circle at 20% 0,#f97316,#4f46e5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:18px;
+    font-weight:700;
+    box-shadow:0 12px 22px rgba(15,23,42,0.8);
+    animation: float 3.5s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100%{ transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .sb-title-text h1 {
+    font-size:17px;
+    margin:0;
+  }
+  .sb-title-text span {
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  .sb-badge {
+    font-size:11px;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(34,197,94,0.5);
+    color:#bbf7d0;
+    background:rgba(22,163,74,0.12);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .sb-badge-dot {
+    width:7px;
+    height:7px;
+    border-radius:999px;
+    background:#22c55e;
+    box-shadow:0 0 0 6px rgba(34,197,94,0.3);
+  }
+
+  /* sidebar sections */
+  .sb-section-title {
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-muted);
+    margin:14px 0 8px;
+  }
+  .sb-menu {
+    list-style:none;
+    padding:0;
+    margin:0;
+  }
+  .sb-menu li {
+    margin-bottom:6px;
+  }
+  .sb-link {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:14px;
+    color:var(--text-muted);
+    font-size:13px;
+    cursor:pointer;
+    transition: all .25s ease;
+  }
+  .sb-link span:first-child {
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .sb-link-icon {
+    width:22px;
+    height:22px;
+    border-radius:10px;
+    background:rgba(148,163,184,0.14);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+  }
+  .sb-link-active,
+  .sb-link:hover {
+    background:linear-gradient(135deg,var(--accent-soft),rgba(15,23,42,0.95));
+    color:#e5e7eb;
+    transform:translateY(-1px);
+    box-shadow:0 6px 14px rgba(15,23,42,0.7);
+  }
+
+  /* sidebar GIF card */
+  .analytics-gif-card {
+    margin-top:18px;
+    padding:12px;
+    border-radius:18px;
+    background:radial-gradient(circle at 0 0,#22c55e22,transparent 60%),
+               radial-gradient(circle at 100% 100%,#3b82f622,transparent 60%),
+               rgba(15,23,42,0.95);
+    border:1px solid rgba(148,163,184,0.4);
+    position:relative;
+    overflow:hidden;
+    animation: bounceIn 0.7s ease-out 0.3s both;
+  }
+
+  @keyframes bounceIn {
+    0% { transform:scale(.88); opacity:0; }
+    60% { transform:scale(1.03); opacity:1; }
+    100%{ transform:scale(1); }
+  }
+
+  .analytics-gif-card img {
+    width:100%;
+    border-radius:14px;
+    display:block;
+  }
+  .analytics-gif-caption {
+    font-size:12px;
+    margin-top:8px;
+    color:var(--text-muted);
+  }
+
+  /* main area */
+  .analytics-main {
+    position:relative;
+    animation: slideUp 0.7s cubic-bezier(.16,.8,.32,1.2) forwards;
+    transform-origin:right bottom;
+    opacity:0;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px) scale(.97); opacity:0; }
+    to   { transform: translateY(0) scale(1); opacity:1; }
+  }
+
+  .am-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    color:var(--text-main);
+  }
+  .am-header-title h2 {
+    margin:0;
+    font-size:20px;
+  }
+  .am-header-title span {
+    font-size:12px;
+    color:var(--text-muted);
+  }
+  .am-header-actions {
+    display:flex;
+    gap:8px;
+  }
+  .btn-pill {
+    border-radius:999px;
+    border:none;
+    padding:8px 14px;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(15,23,42,0.9);
+    color:var(--text-main);
+    border:1px solid rgba(148,163,184,0.4);
+    transition:all .22s ease;
+  }
+  .btn-pill-primary {
+    background:linear-gradient(135deg,#6366f1,#22c55e);
+    border:none;
+    color:#f9fafb;
+    box-shadow:0 12px 25px rgba(79,70,229,0.6);
+  }
+  .btn-pill:hover {
+    transform:translateY(-1px) scale(1.01);
+    box-shadow:0 9px 18px rgba(15,23,42,0.8);
+  }
+
+  /* KPI rows */
+  .kpi-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:16px;
+  }
+  @media (max-width:1200px){
+    .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    body{
+      overflow-x: hidden;
+    }
+  }
+  @media (max-width:720px){
+    .kpi-grid { grid-template-columns:1fr; }
+  }
+
+  .card {
+    background:var(--card-bg);
+    border-radius:var(--radius-lg);
+    border:1px solid var(--card-border);
+    padding:12px 13px 11px;
+    color:var(--text-main);
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 14px 26px rgba(15,23,42,0.8);
+    transform:translateY(6px) scale(.98);
+    opacity:0;
+    animation: cardIn 0.5s ease-out forwards;
+  }
+  .card[data-delay]{
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes cardIn {
+    from { transform:translateY(18px) scale(.97); opacity:0; }
+    to   { transform:translateY(0) scale(1); opacity:1; }
+  }
+
+  .card:hover{
+    transform:translateY(-3px) scale(1.01);
+    box-shadow:var(--shadow-soft);
+  }
+
+  .card-label {
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.11em;
+    color:var(--text-muted);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .card-label span:last-child {
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:999px;
+    background:rgba(15,23,42,0.9);
+    border:1px solid rgba(148,163,184,0.4);
+  }
+
+  .card-value {
+    font-size:20px;
+    font-weight:600;
+    margin-top:8px;
+  }
+  .card-trend {
+    font-size:12px;
+    margin-top:4px;
+    color:#a5b4fc;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .chip {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:2px 7px;
+    border-radius:999px;
+    font-size:11px;
+  }
+  .chip-success {
+    background:rgba(22,163,74,0.16);
+    color:#bbf7d0;
+  }
+  .chip-warn {
+    background:rgba(234,179,8,0.18);
+    color:#fef9c3;
+  }
+  .chip-danger {
+    background:rgba(220,38,38,0.18);
+    color:#fee2e2;
+  }
+
+  /* main grid (charts + lists) */
+  .grid-2 {
+    display:grid;
+    grid-template-columns:2.1fr 1.4fr;
+    gap:14px;
+    margin-bottom:14px;
+  }
+  @media (max-width:1200px){
+    .grid-2 { grid-template-columns:1fr; }
+  }
+
+  .chart-card {
+    background:var(--card-bg);
+    border-radius:var(--radius-lg);
+    border:1px solid var(--card-border);
+    padding:12px 14px 10px;
+    color:var(--text-main);
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 14px 24px rgba(15,23,42,0.85);
+    transform:translateY(8px);
+    opacity:0;
+    animation: cardIn 0.55s ease-out forwards;
+  }
+  .chart-card h3 {
+    margin:0 0 4px;
+    font-size:14px;
+  }
+  .chart-sub {
+    font-size:11px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .chart-inner {
+    position:relative;
+    height:220px;
+  }
+  .chart-inner canvas{
+    position:absolute;
+    inset:0;
+  }
+
+  .pill-group {
+    display:flex;
+    gap:6px;
+    font-size:11px;
+  }
+
+  /* top merchants list */
+  .list-table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+    margin-top:6px;
+  }
+  .list-table th,
+  .list-table td {
+    padding:6px 4px;
+    text-align:left;
+  }
+  .list-table th {
+    color:var(--text-muted);
+    font-weight:500;
+    border-bottom:1px solid rgba(148,163,184,0.4);
+  }
+  .list-table tr + tr td {
+    border-top:1px dashed rgba(51,65,85,0.9);
+  }
+
+  /* mini badge for status */
+  .status-dot {
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    margin-right:6px;
+    display:inline-block;
+  }
+  .status-success { background:#22c55e; }
+  .status-pending { background:#facc15; }
+  .status-failed  { background:#ef4444; }
+
+  /* bottom grid */
+  .grid-3 {
+    display:grid;
+    grid-template-columns:1.5fr 1.5fr 1.1fr;
+    gap:14px;
+  }
+  @media (max-width:1200px){
+    .grid-3 { grid-template-columns:1fr; }
+  }
+
+  /* small shimmer animation for numbers */
+  .pulse-number {
+    animation:pulseGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%,100%{ text-shadow:0 0 0 rgba(129,140,248,0); }
+    50%{ text-shadow:0 0 14px rgba(129,140,248,0.6); }
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-shell">
+  <div class="analytics-layout">
+
+    <!-- ========== LEFT SIDEBAR ========== -->
+    <aside class="analytics-sidebar">
+      <div class="sidebar-glow"></div>
+
+      <div class="sb-header">
+        <div class="sb-title">
+          <div class="sb-logo">V</div>
+          <div class="sb-title-text">
+            <h1>VPay Analytics</h1>
+            <span>Admin visibility • last 14 days</span>
+          </div>
+        </div>
+        <div class="sb-badge">
+          <span class="sb-badge-dot"></span> Live monitor
+        </div>
+      </div>
+
+      <div>
+        <div class="sb-section-title">Overview</div>
+        <ul class="sb-menu">
+          <li><div class="sb-link sb-link-active">
+            <span><span class="sb-link-icon">📊</span>Global summary</span>
+            <span>Now</span>
+          </div></li>
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">👤</span>Merchant / KYC</span>
+            <span>{{ total_merchants }}</span>
+          </div></li>
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">💸</span>Payments</span>
+            <span>{{ total_txns }}</span>
+          </div></li>
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">🧪</span>Sandbox usage</span>
+            <span>{{ sandbox_total_sessions }}</span>
+          </div></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="sb-section-title">Health</div>
+        <ul class="sb-menu">
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">✅</span>Success rate</span>
+            <span>{{ success_rate|floatformat:1 }}%</span>
+          </div></li>
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">⚠️</span>Pending txns</span>
+            <span>{{ pending_count }}</span>
+          </div></li>
+          <li><div class="sb-link">
+            <span><span class="sb-link-icon">🔐</span>Test keys</span>
+            <span>{{ test_keys_total }}</span>
+          </div></li>
+        </ul>
+      </div>
+
+      <!-- animated GIF panel -->
+      <div class="analytics-gif-card">
+        <!-- put some analytics gif in static/analytics/analytics-growth.gif -->
+        <img src="{% static 'analytics/analytics-growth.gif' %}" alt="Analytics animation">
+        <div class="analytics-gif-caption">
+          Realtime view of merchant flows, payment conversions & sandbox traffic.  
+          All the important spikes at a glance.
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN AREA ========== -->
+    <main class="analytics-main">
+      <!-- header -->
+      <div class="am-header">
+        <div class="am-header-title">
+          <h2>Admin Analytics Overview</h2>
+          <span>Merchant / KYC • Payments • Sandbox usage</span>
+        </div>
+        <div class="am-header-actions">
+          <button class="btn-pill">
+            <span>⟳</span>Refresh snapshot
+          </button>
+          <button class="btn-pill btn-pill-primary">
+            <span>⬇</span>Download report
+          </button>
+        </div>
+      </div>
+
+      <!-- top KPI row: Merchants / KYC / Sandbox keys -->
+      <section class="kpi-grid">
+        <div class="card" style="--delay:0s">
+          <div class="card-label">
+            <span>Merchants</span>
+            <span>All time</span>
+          </div>
+          <div class="card-value pulse-number">{{ total_merchants }}</div>
+          <div class="card-trend">
+            <span class="chip chip-success">Test KYC {{ test_kyc_approved }}/{{ test_kyc_total }}</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.06s">
+          <div class="card-label">
+            <span>KYC funnel</span>
+            <span>Live approved</span>
+          </div>
+          <div class="card-value">{{ live_kyc_approved }}</div>
+          <div class="card-trend">
+            <span class="chip chip-warn">Live submitted {{ live_kyc_total }}</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.12s">
+          <div class="card-label">
+            <span>Keys issued</span>
+            <span>Sandbox / Test</span>
+          </div>
+          <div class="card-value">{{ sandbox_keys_total }}/{{ test_keys_total }}</div>
+          <div class="card-trend">
+            <span class="chip chip-success">Active sandbox keys</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.18s">
+          <div class="card-label">
+            <span>Sandbox sessions</span>
+            <span>Last 14d</span>
+          </div>
+          <div class="card-value">{{ sandbox_total_sessions }}</div>
+          <div class="card-trend">
+            <span class="chip chip-success">✓ {{ sandbox_success }} success</span>
+            <span class="chip chip-warn">⏳ {{ sandbox_pending }} pending</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- second KPI row: Payments -->
+      <section class="kpi-grid">
+        <div class="card" style="--delay:0.24s">
+          <div class="card-label">
+            <span>Total transactions</span>
+            <span>All time</span>
+          </div>
+          <div class="card-value pulse-number">{{ total_txns }}</div>
+          <div class="card-trend">
+            <span class="chip chip-success">Success {{ success_count }}</span>
+            <span class="chip chip-warn">Pending {{ pending_count }}</span>
+            <span class="chip chip-danger">Failed {{ failed_count }}</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.30s">
+          <div class="card-label">
+            <span>Processed volume</span>
+            <span>₹</span>
+          </div>
+          <div class="card-value">₹{{ total_amount|floatformat:2 }}</div>
+          <div class="card-trend">
+            <span class="chip chip-success">Avg. ticket ₹{{ avg_ticket_size|floatformat:2 }}</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.36s">
+          <div class="card-label">
+            <span>Success rate</span>
+            <span>Payments</span>
+          </div>
+          <div class="card-value">{{ success_rate|floatformat:1 }}%</div>
+          <div class="card-trend">
+            <span class="chip chip-success">Healthy if &gt; 95%</span>
+          </div>
+        </div>
+
+        <div class="card" style="--delay:0.42s">
+          <div class="card-label">
+            <span>Active users</span>
+            <span>Last 14d</span>
+          </div>
+          <div class="card-value">{{ active_users }}</div>
+          <div class="card-trend">
+            <span class="chip chip-warn">Unique merchants doing txns</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- charts block 1: Transactions + KYC funnel -->
+      <section class="grid-2">
+        <div class="chart-card" style="--delay:0.46s">
+          <h3>Transactions per day</h3>
+          <div class="chart-sub">
+            Volume trend across last 14 days.
+          </div>
+          <div class="chart-inner">
+            <canvas id="txnsBarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="--delay:0.50s">
+          <h3>Merchant KYC funnel</h3>
+          <div class="chart-sub">
+            Registered → Test KYC → Live KYC approvals.
+          </div>
+          <div class="chart-inner">
+            <canvas id="kycFunnelChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- charts block 2: Status + Providers -->
+      <section class="grid-2">
+        <div class="chart-card" style="--delay:0.54s">
+          <h3>Payment status mix</h3>
+          <div class="chart-sub">
+            Completed vs pending vs failed transactions.
+          </div>
+          <div class="chart-inner">
+            <canvas id="statusDonut"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="--delay:0.58s">
+          <h3>Top providers</h3>
+          <div class="chart-sub">
+            UPI app / provider distribution.
+          </div>
+          <div class="chart-inner">
+            <canvas id="providerBar"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- bottom: sandbox + top merchants + quick stats -->
+      <section class="grid-3">
+        <div class="chart-card" style="--delay:0.62s">
+          <h3>Sandbox sessions</h3>
+          <div class="chart-sub">Developers hitting your sandbox checkout / APIs.</div>
+          <div class="chart-inner">
+            <canvas id="sandboxLine"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="--delay:0.66s">
+          <h3>Sandbox status</h3>
+          <div class="chart-sub">Success / pending / failed sessions.</div>
+          <div class="chart-inner">
+            <canvas id="sandboxStatusDonut"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="--delay:0.70s">
+          <h3>Top merchants</h3>
+          <div class="chart-sub">By processed volume.</div>
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th>Merchant</th>
+                <th>Txns</th>
+                <th>Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in top_merchants %}
+              <tr>
+                <td>{{ m.username }}</td>
+                <td>{{ m.tx_count }}</td>
+                <td>{{ m.tx_amount|floatformat:2 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3">No transactions yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof Chart === "undefined") {
+    console.error("Chart.js not loaded");
+    return;
+  }
+
+  // data from view
+  const labels           = {{ labels_json|safe }};
+  const series           = {{ series_json|safe }};
+  const statusLabels     = {{ status_labels_json|safe }};
+  const statusCounts     = {{ status_counts_json|safe }};
+  const providerLabels   = {{ provider_labels_json|safe }};
+  const providerCounts   = {{ provider_counts_json|safe }};
+  const kycFunnelLabels  = {{ kyc_funnel_labels_json|safe }};
+  const kycFunnelCounts  = {{ kyc_funnel_counts_json|safe }};
+  const sandboxLabels    = {{ sandbox_labels_json|safe }};
+  const sandboxSeries    = {{ sandbox_series_json|safe }};
+  const sandboxStatusLabels = {{ sandbox_status_labels_json|safe }};
+  const sandboxStatusCounts = {{ sandbox_status_counts_json|safe }};
+
+  // helper palette
+  const accent   = "#6366f1";
+  const accent2  = "#22c55e";
+  const warning  = "#f97316";
+  const danger   = "#ef4444";
+  const cyan     = "#22d3ee";
+  const slate    = "#64748b";
+
+  // Transactions bar
+  try {
+    new Chart(document.getElementById("txnsBarChart"), {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Transactions",
+          data: series,
+          backgroundColor: "rgba(99,102,241,0.8)",
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: "#9ca3af" }, grid: { display:false } },
+          y: { ticks: { color: "#9ca3af" }, grid: { color:"rgba(30,64,175,0.4)" } },
+        },
+        plugins: {
+          legend: { display:false }
+        }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // KYC funnel doughnut
+  try {
+    new Chart(document.getElementById("kycFunnelChart"), {
+      type: "doughnut",
+      data: {
+        labels: kycFunnelLabels,
+        datasets: [{
+          data: kycFunnelCounts,
+          backgroundColor: [accent, accent2, cyan, warning, danger]
+        }]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:"#e5e7eb", boxWidth:10 } } }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // Status donut
+  try {
+    new Chart(document.getElementById("statusDonut"), {
+      type: "doughnut",
+      data: {
+        labels: statusLabels,
+        datasets: [{
+          data: statusCounts,
+          backgroundColor: [accent2, warning, danger, slate]
+        }]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:"#e5e7eb", boxWidth:10 } } }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // Providers bar
+  try {
+    new Chart(document.getElementById("providerBar"), {
+      type: "bar",
+      data: {
+        labels: providerLabels,
+        datasets: [{
+          label: "Count",
+          data: providerCounts,
+          backgroundColor: "rgba(56,189,248,0.85)",
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive:true,
+        maintainAspectRatio:false,
+        scales:{
+          x:{ ticks:{ color:"#9ca3af" }, grid:{ color:"rgba(30,64,175,0.3)" } },
+          y:{ ticks:{ color:"#9ca3af" }, grid:{ display:false } }
+        },
+        plugins:{ legend:{ display:false } }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // Sandbox sessions line
+  try {
+    new Chart(document.getElementById("sandboxLine"), {
+      type: "line",
+      data: {
+        labels: sandboxLabels,
+        datasets: [{
+          label: "Sessions",
+          data: sandboxSeries,
+          borderColor: accent2,
+          backgroundColor: "rgba(34,197,94,0.18)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        scales:{
+          x:{ ticks:{ color:"#9ca3af" }, grid:{ display:false } },
+          y:{ ticks:{ color:"#9ca3af" }, grid:{ color:"rgba(15,23,42,0.8)" } }
+        },
+        plugins:{ legend:{ display:false } }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // Sandbox status donut
+  try {
+    new Chart(document.getElementById("sandboxStatusDonut"), {
+      type: "doughnut",
+      data: {
+        labels: sandboxStatusLabels,
+        datasets: [{
+          data: sandboxStatusCounts,
+          backgroundColor: [accent2, warning, danger, slate]
+        }]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:"#e5e7eb", boxWidth:10 } } }
+      }
+    });
+  } catch(e){ console.error(e); }
+
+});
+</script>
+{% endblock %}

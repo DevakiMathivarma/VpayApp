@@ -1,0 +1,22 @@
+.env
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Capacitor
+www/build/

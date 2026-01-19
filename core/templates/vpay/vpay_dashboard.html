@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VPay Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root{
+            --sidebar-bg:#0d0f14;
+            --sidebar-active:#111827;
+            --text-light:#e6eef8;
+            --text-muted:#94a3b8;
+            --accent:#f97316;
+            --accent-2:#f59e0b;
+            --success:#10b981;
+            --card-bg:#ffffff;
+            --shadow:0 12px 30px rgba(6,15,30,0.06);
+            --glass: rgba(255,255,255,0.6);
+            --glass-2: rgba(255,255,255,0.9);
+            font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        /* page layout */
+        html,body{
+            height:100%;
+            margin:0;
+            color:#051025;
+            background: radial-gradient(circle at 20% 20%, #fffecf 0%, #fff4b8 20%, transparent 60%),
+                        radial-gradient(circle at 80% 80%, #ffcab8 0%, #ffb4a2 30%, transparent 70%),
+                        radial-gradient(circle at 50% 50%, #ffe3a3 0%, #ffd59f 40%, #ffc3a0 70%, #ffb3a7 100%);
+        }
+        body{
+            display:flex;
+            overflow:hidden;
+        }
+
+        /* ---------- SIDEBAR ---------- */
+        .sidebar{
+            width:260px;
+            background:linear-gradient(180deg,var(--sidebar-bg),#071025 120%);
+            color:var(--text-light);
+            padding:28px 18px;
+            display:flex;
+            flex-direction:column;
+            box-shadow: 6px 0 30px rgba(2,6,23,0.14);
+        }
+        .brand{
+            display:flex;align-items:center;gap:12px;margin-bottom:22px;
+        }
+        .brand .logo{
+            width:44px;height:44px;border-radius:10px;background:linear-gradient(180deg,var(--accent),var(--accent-2));
+            display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;
+            box-shadow:0 8px 22px rgba(249,115,22,0.14)
+        }
+        .brand h2{margin:0;font-size:18px;font-weight:800}
+
+        .nav{
+            display:flex;flex-direction:column;gap:6px;margin-top:6px;
+        }
+        .nav-link{
+            display:flex;align-items:center;justify-content:space-between;gap:10px;
+            padding:12px 12px;border-radius:10px;color:var(--text-light);text-decoration:none;font-weight:600;font-size:14px;
+            transition: all .18s ease;cursor:pointer;
+        }
+        .nav-link .left{display:flex;align-items:center;gap:12px}
+        .nav-link:hover{background:var(--sidebar-active);transform:translateX(6px)}
+        .nav-link.active{
+            background:linear-gradient(90deg, rgba(249,115,22,0.08), rgba(245,158,11,0.02));
+            border-left:4px solid var(--accent);
+            padding-left:14px
+        }
+        /* ----- */
+           .nav-links{
+            display:flex;align-items:center;justify-content:space-between;gap:10px;
+            padding:12px 12px;border-radius:10px;color:var(--text-light);text-decoration:none;font-weight:600;font-size:14px;
+            transition: all .18s ease;cursor:pointer;
+        }
+        .nav-links .left{display:flex;align-items:center;gap:12px}
+        .nav-links:hover{background:var(--sidebar-active);transform:translateX(6px)}
+        .nav-links.active{
+            background:linear-gradient(90deg, rgba(249,115,22,0.08), rgba(245,158,11,0.02));
+            border-left:4px solid var(--accent);
+            padding-left:14px
+        }
+
+        .sidebar-badge{
+            background:rgba(255,255,255,0.06);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;color:var(--text-light)
+        }
+        .sidebar-badge.pending{background:rgba(255,242,205,0.12);color:#ffb84a}
+        .sidebar-badge.success{background:rgba(211,250,231,0.12);color:var(--success)}
+
+        .nav-footer{margin-top:auto;color:var(--text-muted);font-size:13px;padding:18px 6px}
+
+        /* ---------- MAIN ---------- */
+        .main{
+            flex:1;
+            padding:36px;
+            overflow:auto;
+            position:relative;
+        }
+        .header{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:20px;
+        }
+        .title{font-size:28px;font-weight:800;margin:0}
+        .subtitle{color:var(--text-muted);margin-top:6px;font-size:14px}
+
+        /* user highlight area */
+        .user-chip{
+            display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;
+            background:linear-gradient(90deg, rgba(249,115,22,0.06), rgba(245,158,11,0.02));
+            box-shadow:0 12px 30px rgba(249,115,22,0.06);
+            border:1px solid rgba(249,115,22,0.06);
+            font-weight:800;color:#0b1220;
+        }
+        .avatar{
+            width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,#fff,#fff7ed);
+            display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent-2);font-size:18px;
+            box-shadow:0 8px 24px rgba(249,115,22,0.08)
+        }
+        .user-meta{display:flex;flex-direction:column}
+        .user-meta .name{font-size:16px}
+        .user-meta .small{font-size:13px;color:var(--text-muted);font-weight:600}
+
+        /* ---------- VIEW CONTAINER ---------- */
+        .grid{
+            margin-top:18px;
+            max-width:1200px;
+        }
+
+        .view{
+            display:none;
+            animation:none;
+        }
+        .view.active{
+            display:block;
+        }
+        .view.view-enter{
+            animation:fadeSlide .4s ease-out;
+        }
+
+        @keyframes fadeSlide{
+            from{
+                opacity:0;
+                transform:translateY(18px) scale(.98);
+            }
+            to{
+                opacity:1;
+                transform:none;
+            }
+        }
+
+        /* ---------- CARDS ---------- */
+        .card{
+            background:var(--card-bg);
+            border-radius:14px;
+            padding:22px;
+            box-shadow:var(--shadow);
+            transform:translateY(10px);
+            opacity:0;
+            transition: all .6s cubic-bezier(.2,.9,.2,1);
+        }
+        .card.revealed{transform:none;opacity:1}
+
+        .card h3{margin:0 0 8px;font-size:18px}
+        .pill{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:800;font-size:13px}
+        .pill.pending{background:#fff7ed;color:#b45309}
+        .pill.success{background:#ecfdf5;color:#065f46}
+
+        /* ---------- OVERVIEW HERO & CONTENT ---------- */
+        .overview-hero{
+            background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,247,237,0.95));
+            border-radius:18px;
+            padding:24px 26px;
+            display:flex;
+            flex-direction:column;
+            gap:20px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .overview-layout{
+            display:flex;
+            gap:32px;
+            align-items:stretch;
+        }
+        .overview-left{
+            flex:1.4;
+            display:flex;
+            flex-direction:column;
+            gap:16px;
+        }
+        .overview-title{
+            font-size:22px;
+            font-weight:800;
+            letter-spacing:0.01em;
+        }
+        .overview-sub{
+            font-size:14px;
+            color:var(--text-muted);
+        }
+
+        .status-chips{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-top:4px;
+        }
+        .status-pill{
+            padding:6px 12px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            background:rgba(15,23,42,0.03);
+            color:#0b1220;
+        }
+        .status-pill.success{
+            background:#ecfdf5;
+            color:#065f46;
+        }
+        .status-pill.warn{
+            background:#fff7ed;
+            color:#b45309;
+        }
+        .status-pill.locked{
+            background:#fef2f2;
+            color:#b91c1c;
+        }
+
+        .status-dot{
+            width:8px;
+            height:8px;
+            border-radius:999px;
+            background:#22c55e;
+        }
+        .status-dot.warn{background:#f97316;}
+        .status-dot.locked{background:#ef4444;}
+
+        .overview-steps{
+            margin:8px 0 0;
+            padding:0;
+            list-style:none;
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+        .overview-step{
+            flex:1 1 160px;
+            display:flex;
+            align-items:flex-start;
+            gap:8px;
+            padding:10px 12px;
+            border-radius:12px;
+            background:rgba(15,23,42,0.02);
+            font-size:12px;
+        }
+        .step-index{
+            width:20px;
+            height:20px;
+            border-radius:999px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:11px;
+            font-weight:700;
+            background:#fef3c7;
+            color:#92400e;
+        }
+        .overview-step.done .step-index{
+            background:#dcfce7;
+            color:#166534;
+        }
+        .overview-step strong{
+            font-size:12px;
+            display:block;
+            margin-bottom:2px;
+        }
+        .overview-step span{
+            color:var(--text-muted);
+        }
+
+        .overview-actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:6px;
+        }
+        .btn-primary{
+            border:none;
+            outline:none;
+            cursor:pointer;
+            border-radius:999px;
+            padding:8px 14px;
+            font-size:13px;
+            font-weight:700;
+            background:linear-gradient(135deg,var(--accent),var(--accent-2));
+            color:white;
+            box-shadow:0 10px 25px rgba(249,115,22,0.3);
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+        }
+        .btn-ghost-soft{
+            border-radius:999px;
+            padding:7px 12px;
+            font-size:12px;
+            font-weight:600;
+            background:rgba(15,23,42,0.02);
+            border:1px dashed rgba(15,23,42,0.06);
+            color:#0b1220;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+        }
+
+        /* overview right animated visual */
+        .overview-right{
+            flex:1;
+            min-width:220px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+        }
+        .orbit-shell{
+            width:220px;
+            height:220px;
+            border-radius:999px;
+            background:radial-gradient(circle at 30% 10%, #fff7ed 0, transparent 60%),
+                       radial-gradient(circle at 80% 80%, #fee2e2 0, transparent 70%);
+            position:relative;
+            box-shadow:0 20px 40px rgba(15,23,42,0.15);
+            overflow:hidden;
+        }
+        .orbit-core{
+            position:absolute;
+            inset:30%;
+            border-radius:999px;
+            background:linear-gradient(135deg,#f97316,#fb923c);
+            box-shadow:0 0 0 6px rgba(255,255,255,0.8);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:white;
+            font-size:12px;
+            font-weight:700;
+            text-align:center;
+            padding:4px 6px;
+        }
+        .orbit-core span{
+            font-size:11px;
+            opacity:.9;
+        }
+
+        .orbit-ring{
+            position:absolute;
+            inset:10%;
+            border-radius:999px;
+            border:1px dashed rgba(15,23,42,0.12);
+            animation:spin 18s linear infinite;
+        }
+        .orbit-dot{
+            position:absolute;
+            width:18px;
+            height:18px;
+            border-radius:999px;
+            background:white;
+            box-shadow:0 6px 15px rgba(15,23,42,0.16);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:11px;
+        }
+        .orbit-dot.dot1{top:-9px;left:50%;transform:translateX(-50%);}
+        .orbit-dot.dot2{bottom:5px;left:8%;}
+        .orbit-dot.dot3{bottom:5px;right:8%;}
+
+        @keyframes spin{
+            from{transform:rotate(0deg);}
+            to{transform:rotate(360deg);}
+        }
+
+        .orbit-glow{
+            position:absolute;
+            inset:0;
+            border-radius:999px;
+            background:radial-gradient(circle, rgba(249,115,22,0.18) 0, transparent 60%);
+            mix-blend-mode:multiply;
+            opacity:.7;
+            animation:pulse 2.6s ease-in-out infinite;
+        }
+        @keyframes pulse{
+            0%,100%{transform:scale(0.98);opacity:.55;}
+            50%{transform:scale(1.03);opacity:.9;}
+        }
+
+        /* overview lower cards */
+        .overview-grid{
+            margin-top:18px;
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+            gap:14px;
+        }
+        .overview-card{
+            padding:16px 18px;
+            border-radius:14px;
+            background:linear-gradient(180deg,#ffffff,#fcfcff);
+            border:1px solid rgba(15,23,42,0.04);
+            box-shadow:0 10px 26px rgba(15,23,42,0.04);
+            font-size:13px;
+        }
+        .overview-card h4{
+            margin:0 0 6px;
+            font-size:14px;
+        }
+        .overview-card p{
+            margin:0;
+            color:var(--text-muted);
+        }
+        .overview-tag{
+            display:inline-block;
+            font-size:11px;
+            padding:3px 8px;
+            border-radius:999px;
+            background:rgba(15,23,42,0.03);
+            margin-bottom:6px;
+        }
+
+        /* Keys style */
+        .keys-area{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+        .key-box{
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            padding:14px;border-radius:10px;background:linear-gradient(180deg,#f6f9fb,#f1f5f9);font-family:ui-monospace, SFMono-Regular,Menlo,Monaco,monospace;
+            border:1px solid rgba(10,20,30,0.04);font-size:13px;color:#0f1724;
+            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.5);
+        }
+        .copy-btn{
+            background:var(--accent);
+            border:none;
+            color:white;
+            padding:8px 12px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:800;
+            transition:transform .12s ease, box-shadow .12s, background .12s;
+        }
+        .copy-btn:active{transform:translateY(1px)}
+        .copy-btn.copied{
+            background:linear-gradient(90deg,var(--accent-2),var(--accent));
+            box-shadow:0 8px 20px rgba(249,115,22,0.16)
+        }
+
+        /* ---------- SUPPORT ---------- */
+        .support-hero{
+            display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px;border-radius:14px;
+            background:linear-gradient(135deg, rgba(249,115,22,0.06), rgba(15,23,42,0.02));
+            border:1px solid rgba(10,20,30,0.03);
+            text-align:center;overflow:hidden;position:relative;
+        }
+        .support-hero::before{
+            content:"";position:absolute;inset:-30%;background:conic-gradient(from 180deg at 50% 50%, rgba(249,115,22,0.06), rgba(245,158,11,0.03), rgba(16,185,129,0.02));
+            filter: blur(36px);opacity:0;transform:scale(.95);transition:all .9s ease;border-radius:40%;
+        }
+        .support-hero.revealed::before{opacity:1;transform:none}
+        .support-hero h2{margin:0;font-size:20px;font-weight:800}
+        .support-hero p{margin:12px 0 0;color:var(--text-muted)}
+        .support-contacts{display:flex;gap:18px;align-items:center;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+        .contact-card{
+            background:white;padding:14px;border-radius:12px;box-shadow:0 10px 30px rgba(6,12,24,0.06);min-width:220px;
+            transform:translateY(8px);opacity:0;transition:all .6s cubic-bezier(.2,.9,.2,1);
+        }
+        .contact-card.revealed{transform:none;opacity:1}
+        .contact-card b{display:block;font-size:14px;margin-bottom:6px}
+        .contact-note{font-size:13px;color:var(--text-muted);margin-top:8px}
+
+        /* tiny icons */
+        .ic{opacity:.9;font-size:14px}
+
+        /* ---------- Generic tips (reused) ---------- */
+        .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+        .tip{padding:14px;border-radius:10px;background:linear-gradient(180deg,#fff,#fcfcff);border:1px solid rgba(10,20,30,0.03);box-shadow:0 10px 30px rgba(6,12,24,0.03)}
+        .tip h4{margin:0 0 6px;font-size:15px}
+        .tip p{margin:0;color:var(--text-muted);font-size:13px}
+
+        /* reveal animation helper */
+        .reveal-up{transform:translateY(10px);opacity:0;transition:all .6s cubic-bezier(.2,.9,.2,1)}
+        .reveal-up.show{transform:none;opacity:1}
+
+        /* KYC view tweaks */
+        .kyc-layout{
+            display:flex;
+            flex-direction:column;
+            gap:18px;
+        }
+        .kyc-banner{
+            border-radius:14px;
+            padding:16px 18px;
+            background:linear-gradient(135deg,#fffbeb,#fef3c7);
+            border:1px solid #facc15;
+            font-size:14px;
+        }
+        .kyc-banner.success{
+            background:linear-gradient(135deg,#ecfdf3,#dcfce7);
+            border-color:#22c55e;
+        }
+        .kyc-banner.pending{
+            background:linear-gradient(135deg,#eff6ff,#dbeafe);
+            border-color:#3b82f6;
+        }
+
+        /* Keys view snippets */
+        .snippet-tabs{
+            display:flex;
+            gap:8px;
+            margin-top:16px;
+            margin-bottom:6px;
+            flex-wrap:wrap;
+        }
+        .snippet-tab{
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:12px;
+            cursor:pointer;
+            background:rgba(15,23,42,0.03);
+            border:1px solid transparent;
+        }
+        .snippet-tab.active{
+            background:#0f172a;
+            color:#f9fafb;
+        }
+        .snippet-box{
+            border-radius:12px;
+            background:#020617;
+            color:#e5e7eb;
+            padding:12px 14px;
+            font-family:ui-monospace, SFMono-Regular,Menlo,Monaco,monospace;
+            font-size:12px;
+            overflow:auto;
+            max-height:220px;
+            white-space:pre;
+        }
+        .inline-form .btn-ghost {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 30px;
+  
+    margin-bottom: 20px;
+}
+
+.inline-form .btn-ghost:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+}
+
+.inline-form .btn-ghost:active {
+    transform: scale(0.96);
+}
+
+
+/* =========================================================
+   EXTRA-SMALL MOBILE (320px – 374px)
+   Carefully tuned for your exact UI
+   ========================================================= */
+@media (min-width: 320px) and (max-width: 374px) {
+
+    /* -------- GLOBAL FIXES -------- */
+    html, body {
+        overflow-x: hidden;
+    }
+
+  body {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* Make main truly own the screen */
+    .main {
+        width: calc(100vw - 50px);
+        max-width: calc(100vw - 50px);
+        overflow-x: hidden;
+    }
+
+    /* Prevent background gap illusion */
+    html, body {
+        background-attachment: fixed;
+    }
+    /* -------- SIDEBAR -------- */
+    .sidebar {
+        width: 50px;
+        padding: 12px 8px;
+        flex-shrink: 0;
+    }
+
+    .brand {
+        justify-content: center;
+    }
+
+    .brand h2 {
+        display: none;
+    }
+
+    .brand .logo {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    .nav-link,
+    .nav-links {
+        padding: 10px 8px;
+        justify-content: center;
+        border-left: none;
+    }
+
+    .nav-link .left span,
+    .nav-links .left span {
+        display: none;
+    }
+
+    .nav-link .left,
+    .nav-links .left {
+        gap: 0;
+        font-size: 18px;
+    }
+
+    .sidebar-badge {
+        display: none;
+    }
+
+    .nav-footer {
+        font-size: 11px;
+        text-align: center;
+        padding: 10px 4px;
+    }
+
+    .nav-footer form {
+        margin-bottom: 8px;
+    }
+
+    /* -------- MAIN LAYOUT -------- */
+    .main {
+        padding: 14px 12px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .title {
+        font-size: 20px;
+        line-height: 1.2;
+    }
+
+    .subtitle {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    /* -------- USER CHIP -------- */
+    .user-chip {
+        width: 100%;
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .user-meta .name {
+        font-size: 14px;
+    }
+
+    .user-meta .small {
+        font-size: 11px;
+    }
+
+    /* -------- OVERVIEW HERO -------- */
+    .overview-hero {
+        padding: 16px 14px;
+        gap: 14px;
+    }
+
+    .overview-layout {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .overview-title {
+        font-size: 16px;
+        line-height: 1.3;
+    }
+
+    .overview-sub {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .status-chips {
+        gap: 6px;
+    }
+
+    .status-pill {
+        font-size: 11px;
+        padding: 5px 9px;
+    }
+
+    /* -------- STEPS -------- */
+    .overview-steps {
+        gap: 8px;
+    }
+
+    .overview-step {
+        flex: 1 1 100%;
+        font-size: 11px;
+        padding: 8px 10px;
+    }
+
+    .step-index {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+
+    /* -------- ACTION BUTTONS -------- */
+    .overview-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-primary,
+    .btn-ghost-soft {
+        width: 100%;
+        justify-content: center;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    /* -------- ORBIT ANIMATION -------- */
+    .overview-right {
+        justify-content: center;
+    }
+
+    .orbit-shell {
+        width: 160px;
+        height: 160px;
+    }
+
+    .orbit-core {
+        font-size: 10px;
+        padding: 4px;
+    }
+
+    .orbit-dot {
+        width: 14px;
+        height: 14px;
+        font-size: 9px;
+    }
+
+    /* -------- OVERVIEW GRID -------- */
+    .overview-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .overview-card {
+        padding: 14px;
+        font-size: 12px;
+    }
+
+    .overview-card h4 {
+        font-size: 13px;
+    }
+
+    /* -------- GENERIC CARDS -------- */
+    .card {
+        padding: 16px 14px;
+    }
+
+    .card h3 {
+        font-size: 16px;
+    }
+
+    /* -------- KEYS VIEW -------- */
+    .key-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        font-size: 12px;
+    }
+
+    .copy-btn {
+        width: 100%;
+        text-align: center;
+        padding: 8px;
+    }
+
+    .snippet-box {
+        font-size: 11px;
+        max-height: 180px;
+    }
+
+    /* -------- SUPPORT VIEW -------- */
+    .support-hero {
+        padding: 20px 14px;
+    }
+
+    .support-hero h2 {
+        font-size: 16px;
+    }
+
+    .support-hero p {
+        font-size: 12px;
+    }
+
+    .support-contacts {
+        gap: 12px;
+    }
+
+    .contact-card {
+        min-width: 100%;
+        padding: 12px;
+        font-size: 12px;
+    }
+
+    /* -------- TIPS -------- */
+    .tips {
+        grid-template-columns: 1fr;
+    }
+
+    .tip h4 {
+        font-size: 14px;
+    }
+
+    .tip p {
+        font-size: 12px;
+    }
+}
+
+/* =========================================================
+   SMALL MOBILE (375px – 424px)
+   Carefully tuned for VPay Dashboard UI
+   ========================================================= */
+@media (min-width: 374px) and (max-width: 424px) {
+
+    /* -------- GLOBAL -------- */
+    html, body {
+        overflow-x: hidden;
+        background-attachment: fixed;
+    }
+
+    body {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* -------- SIDEBAR -------- */
+    .sidebar {
+        width: 72px;
+        padding: 14px 10px;
+        flex-shrink: 0;
+    }
+
+    .brand {
+        justify-content: center;
+    }
+
+    .brand h2 {
+        display: none;
+    }
+
+    .brand .logo {
+        width: 42px;
+        height: 42px;
+        font-size: 15px;
+    }
+
+    .nav-link,
+    .nav-links {
+        padding: 12px 10px;
+        justify-content: center;
+        border-left: none;
+    }
+
+    .nav-link .left span,
+    .nav-links .left span {
+        display: none;
+    }
+
+    .nav-link .left,
+    .nav-links .left {
+        gap: 0;
+        font-size: 18px;
+    }
+
+    .sidebar-badge {
+        display: none;
+    }
+
+    .nav-footer {
+        font-size: 11px;
+        text-align: center;
+        padding: 12px 6px;
+    }
+
+    /* -------- MAIN -------- */
+    .main {
+        width: calc(100vw - 72px);
+        max-width: calc(100vw - 72px);
+        padding: 18px 16px;
+        overflow-x: hidden;
+    }
+
+    /* -------- HEADER -------- */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .title {
+        font-size: 22px;
+        line-height: 1.25;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* -------- USER CHIP -------- */
+    .user-chip {
+        width: 100%;
+        padding: 12px 14px;
+        gap: 12px;
+    }
+
+    .avatar {
+        width: 46px;
+        height: 46px;
+        font-size: 15px;
+    }
+
+    .user-meta .name {
+        font-size: 15px;
+    }
+
+    .user-meta .small {
+        font-size: 12px;
+    }
+
+    /* -------- OVERVIEW HERO -------- */
+    .overview-hero {
+        padding: 18px 16px;
+        gap: 16px;
+    }
+
+    .overview-layout {
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .overview-title {
+        font-size: 18px;
+        line-height: 1.35;
+    }
+
+    .overview-sub {
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .status-chips {
+        gap: 8px;
+    }
+
+    .status-pill {
+        font-size: 12px;
+        padding: 6px 11px;
+    }
+
+    /* -------- STEPS -------- */
+    .overview-steps {
+        gap: 10px;
+    }
+
+    .overview-step {
+        flex: 1 1 100%;
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+
+    .step-index {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+    }
+
+    /* -------- ACTION BUTTONS -------- */
+    .overview-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .btn-primary,
+    .btn-ghost-soft {
+        width: 100%;
+        justify-content: center;
+        font-size: 13px;
+        padding: 9px 14px;
+    }
+
+    /* -------- ORBIT VISUAL -------- */
+    .overview-right {
+        justify-content: center;
+    }
+
+    .orbit-shell {
+        width: 180px;
+        height: 180px;
+    }
+
+    .orbit-core {
+        font-size: 11px;
+    }
+
+    .orbit-dot {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+    }
+
+    /* -------- OVERVIEW GRID -------- */
+    .overview-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .overview-card {
+        padding: 16px;
+        font-size: 13px;
+    }
+
+    .overview-card h4 {
+        font-size: 14px;
+    }
+
+    /* -------- GENERIC CARDS -------- */
+    .card {
+        padding: 18px 16px;
+    }
+
+    .card h3 {
+        font-size: 17px;
+    }
+
+    /* -------- KEYS VIEW -------- */
+    .key-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        font-size: 13px;
+    }
+
+    .copy-btn {
+        width: 100%;
+        text-align: center;
+        padding: 9px;
+    }
+
+    .snippet-box {
+        font-size: 12px;
+        max-height: 200px;
+    }
+
+    /* -------- SUPPORT -------- */
+    .support-hero {
+        padding: 24px 16px;
+    }
+
+    .support-hero h2 {
+        font-size: 17px;
+    }
+
+    .support-hero p {
+        font-size: 13px;
+    }
+
+    .support-contacts {
+        gap: 14px;
+    }
+
+    .contact-card {
+        min-width: 100%;
+        padding: 14px;
+        font-size: 13px;
+    }
+
+    /* -------- TIPS -------- */
+    .tips {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .tip h4 {
+        font-size: 15px;
+    }
+
+    .tip p {
+        font-size: 13px;
+    }
+}
+
+/* =========================================================
+   LARGE MOBILE / SMALL PHABLET (425px – 599px)
+   Tuned for VPay Dashboard
+   ========================================================= */
+@media (min-width: 424px) and (max-width: 599px) {
+
+    /* -------- GLOBAL -------- */
+    html, body {
+        overflow-x: hidden;
+        background-attachment: fixed;
+    }
+
+    body {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* -------- SIDEBAR -------- */
+    .sidebar {
+        width: 84px;
+        padding: 18px 12px;
+        flex-shrink: 0;
+    }
+
+    .brand {
+        justify-content: center;
+    }
+
+    .brand h2 {
+        display: none;
+    }
+
+    .brand .logo {
+        width: 46px;
+        height: 46px;
+        font-size: 16px;
+    }
+
+    .nav-link,
+    .nav-links {
+        padding: 14px 12px;
+        justify-content: center;
+        border-left: none;
+    }
+
+    .nav-link .left span,
+    .nav-links .left span {
+        display: none;
+    }
+
+    .nav-link .left,
+    .nav-links .left {
+        gap: 0;
+        font-size: 20px;
+    }
+
+    .sidebar-badge {
+        display: none;
+    }
+
+    .nav-footer {
+        font-size: 12px;
+        text-align: center;
+        padding: 14px 8px;
+    }
+
+    /* -------- MAIN -------- */
+    .main {
+        width: calc(100vw - 84px);
+        max-width: calc(100vw - 84px);
+        padding: 22px 20px;
+        overflow-x: hidden;
+    }
+
+    /* -------- HEADER -------- */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .title {
+        font-size: 24px;
+        line-height: 1.25;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* -------- USER CHIP -------- */
+    .user-chip {
+        width: 100%;
+        padding: 14px 16px;
+        gap: 14px;
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+    }
+
+    .user-meta .name {
+        font-size: 16px;
+    }
+
+    .user-meta .small {
+        font-size: 13px;
+    }
+
+    /* -------- OVERVIEW HERO -------- */
+    .overview-hero {
+        padding: 22px 20px;
+        gap: 18px;
+    }
+
+    .overview-layout {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .overview-title {
+        font-size: 20px;
+        line-height: 1.4;
+    }
+
+    .overview-sub {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .status-chips {
+        gap: 10px;
+    }
+
+    .status-pill {
+        font-size: 13px;
+        padding: 7px 13px;
+    }
+
+    /* -------- STEPS -------- */
+    .overview-steps {
+        gap: 12px;
+    }
+
+    .overview-step {
+        flex: 1 1 100%;
+        font-size: 13px;
+        padding: 12px 14px;
+    }
+
+    .step-index {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+
+    /* -------- ACTION BUTTONS -------- */
+    .overview-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .btn-primary,
+    .btn-ghost-soft {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .btn-primary {
+        flex: 1 1 100%;
+    }
+
+    /* -------- ORBIT VISUAL -------- */
+    .overview-right {
+        justify-content: center;
+    }
+
+    .orbit-shell {
+        width: 210px;
+        height: 210px;
+    }
+
+    .orbit-core {
+        font-size: 12px;
+    }
+
+    .orbit-dot {
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+    }
+
+    /* -------- OVERVIEW GRID -------- */
+    .overview-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .overview-card {
+        padding: 18px;
+        font-size: 14px;
+    }
+
+    .overview-card h4 {
+        font-size: 15px;
+    }
+
+    /* -------- GENERIC CARDS -------- */
+    .card {
+        padding: 20px;
+    }
+
+    .card h3 {
+        font-size: 18px;
+    }
+
+    /* -------- KEYS VIEW -------- */
+    .key-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        font-size: 14px;
+    }
+
+    .copy-btn {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .snippet-box {
+        font-size: 13px;
+        max-height: 240px;
+    }
+
+    /* -------- SUPPORT -------- */
+    .support-hero {
+        padding: 28px 20px;
+    }
+
+    .support-hero h2 {
+        font-size: 18px;
+    }
+
+    .support-hero p {
+        font-size: 14px;
+    }
+
+    .support-contacts {
+        gap: 16px;
+    }
+
+    .contact-card {
+        min-width: 100%;
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    /* -------- TIPS -------- */
+    .tips {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .tip h4 {
+        font-size: 16px;
+    }
+
+    .tip p {
+        font-size: 14px;
+    }
+}
+
+/* =========================================================
+   LARGE MOBILE / SMALL TABLET PORTRAIT (600px – 767px)
+   Tuned for VPay Dashboard
+   ========================================================= */
+@media (min-width: 599px) and (max-width: 767px) {
+
+    /* -------- GLOBAL -------- */
+    html, body {
+        overflow-x: hidden;
+        background-attachment: fixed;
+    }
+
+    body {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* -------- SIDEBAR -------- */
+    .sidebar {
+        width: 96px;
+        padding: 20px 14px;
+        flex-shrink: 0;
+    }
+
+    .brand {
+        justify-content: center;
+    }
+
+    .brand h2 {
+        display: none;
+    }
+
+    .brand .logo {
+        width: 50px;
+        height: 50px;
+        font-size: 17px;
+    }
+
+    .nav-link,
+    .nav-links {
+        padding: 16px 14px;
+        justify-content: center;
+        border-left: none;
+    }
+
+    .nav-link .left span,
+    .nav-links .left span {
+        display: none;
+    }
+
+    .nav-link .left,
+    .nav-links .left {
+        gap: 0;
+        font-size: 22px;
+    }
+
+    .sidebar-badge {
+        display: none;
+    }
+
+    .nav-footer {
+        font-size: 12px;
+        text-align: center;
+        padding: 16px 10px;
+    }
+
+    /* -------- MAIN -------- */
+    .main {
+        width: calc(100vw - 96px);
+        max-width: calc(100vw - 96px);
+        padding: 26px 24px;
+        overflow-x: hidden;
+    }
+
+    /* -------- HEADER -------- */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .title {
+        font-size: 26px;
+        line-height: 1.25;
+    }
+
+    .subtitle {
+        font-size: 15px;
+        line-height: 1.65;
+    }
+
+    /* -------- USER CHIP -------- */
+    .user-chip {
+        width: 100%;
+        padding: 16px 18px;
+        gap: 16px;
+    }
+
+    .avatar {
+        width: 54px;
+        height: 54px;
+        font-size: 17px;
+    }
+
+    .user-meta .name {
+        font-size: 17px;
+    }
+
+    .user-meta .small {
+        font-size: 14px;
+    }
+
+    /* -------- OVERVIEW HERO -------- */
+    .overview-hero {
+        padding: 24px 22px;
+        gap: 20px;
+    }
+
+    .overview-layout {
+        flex-direction: column;
+        gap: 26px;
+    }
+
+    .overview-title {
+        font-size: 22px;
+        line-height: 1.4;
+    }
+
+    .overview-sub {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .status-chips {
+        gap: 12px;
+    }
+
+    .status-pill {
+        font-size: 14px;
+        padding: 8px 14px;
+    }
+
+    /* -------- STEPS -------- */
+    .overview-steps {
+        gap: 14px;
+    }
+
+    .overview-step {
+        flex: 1 1 100%;
+        font-size: 14px;
+        padding: 14px 16px;
+    }
+
+    .step-index {
+        width: 24px;
+        height: 24px;
+        font-size: 13px;
+    }
+
+    /* -------- ACTION BUTTONS -------- */
+    .overview-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .btn-primary,
+    .btn-ghost-soft {
+        font-size: 14px;
+        padding: 11px 18px;
+    }
+
+    .btn-primary {
+        flex: 1 1 auto;
+    }
+
+    /* -------- ORBIT VISUAL -------- */
+    .overview-right {
+        justify-content: center;
+    }
+
+    .orbit-shell {
+        width: 240px;
+        height: 240px;
+    }
+
+    .orbit-core {
+        font-size: 13px;
+    }
+
+    .orbit-dot {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+    }
+
+    /* -------- OVERVIEW GRID -------- */
+    .overview-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .overview-card {
+        padding: 20px;
+        font-size: 15px;
+    }
+
+    .overview-card h4 {
+        font-size: 16px;
+    }
+
+    /* -------- GENERIC CARDS -------- */
+    .card {
+        padding: 22px;
+    }
+
+    .card h3 {
+        font-size: 19px;
+    }
+
+    /* -------- KEYS VIEW -------- */
+    .key-box {
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        font-size: 14px;
+    }
+
+    .copy-btn {
+        padding: 10px 14px;
+        white-space: nowrap;
+    }
+
+    .snippet-box {
+        font-size: 13px;
+        max-height: 260px;
+    }
+
+    /* -------- SUPPORT -------- */
+    .support-hero {
+        padding: 30px 22px;
+    }
+
+    .support-hero h2 {
+        font-size: 19px;
+    }
+
+    .support-hero p {
+        font-size: 15px;
+    }
+
+    .support-contacts {
+        gap: 18px;
+    }
+
+    .contact-card {
+        min-width: 100%;
+        padding: 18px;
+        font-size: 15px;
+    }
+
+    /* -------- TIPS -------- */
+    .tips {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .tip h4 {
+        font-size: 17px;
+    }
+
+    .tip p {
+        font-size: 15px;
+    }
+}
+/* =========================================================
+   TABLET PORTRAIT / SMALL TABLET LANDSCAPE (768px – 899px)
+   Tuned for VPay Dashboard
+   ========================================================= */
+@media (min-width: 767px) and (max-width: 899px) {
+
+    /* -------- GLOBAL -------- */
+    html, body {
+        overflow-x: hidden;
+        background-attachment: fixed;
+    }
+
+    body {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    /* -------- SIDEBAR -------- */
+    .sidebar {
+        width: 220px;
+        padding: 24px 16px;
+        flex-shrink: 0;
+    }
+
+    .brand {
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .brand h2 {
+        display: block;
+        font-size: 18px;
+    }
+
+    .brand .logo {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .nav-link,
+    .nav-links {
+        padding: 12px 14px;
+        justify-content: space-between;
+        font-size: 14px;
+    }
+
+    .nav-link .left span,
+    .nav-links .left span {
+        display: inline;
+    }
+
+    .nav-link .left,
+    .nav-links .left {
+        gap: 12px;
+        font-size: 14px;
+    }
+
+    .sidebar-badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .nav-footer {
+        font-size: 12px;
+        text-align: left;
+        padding: 18px 8px;
+    }
+
+    /* -------- MAIN -------- */
+    .main {
+        width: calc(100vw - 220px);
+        max-width: calc(100vw - 220px);
+        padding: 32px 30px;
+        overflow-x: hidden;
+    }
+
+    /* -------- HEADER -------- */
+    .header {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .title {
+        font-size: 28px;
+        line-height: 1.3;
+    }
+
+    .subtitle {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    /* -------- USER CHIP -------- */
+    .user-chip {
+        padding: 14px 18px;
+        gap: 14px;
+    }
+
+    .avatar {
+        width: 52px;
+        height: 52px;
+        font-size: 17px;
+    }
+
+    .user-meta .name {
+        font-size: 16px;
+    }
+
+    .user-meta .small {
+        font-size: 13px;
+    }
+
+    /* -------- OVERVIEW HERO -------- */
+    .overview-hero {
+        padding: 26px 28px;
+    }
+
+    .overview-layout {
+        flex-direction: row;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .overview-left {
+        flex: 1.4;
+    }
+
+    .overview-right {
+        flex: 1;
+    }
+
+    .overview-title {
+        font-size: 22px;
+        line-height: 1.4;
+    }
+
+    .overview-sub {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .status-chips {
+        gap: 10px;
+    }
+
+    .status-pill {
+        font-size: 13px;
+        padding: 7px 12px;
+    }
+
+    /* -------- STEPS -------- */
+    .overview-steps {
+        gap: 12px;
+    }
+
+    .overview-step {
+        flex: 1 1 calc(50% - 8px);
+        font-size: 13px;
+        padding: 12px 14px;
+    }
+
+    .step-index {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+
+    /* -------- ACTION BUTTONS -------- */
+    .overview-actions {
+        flex-direction: row;
+        gap: 12px;
+    }
+
+    .btn-primary,
+    .btn-ghost-soft {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    /* -------- ORBIT VISUAL -------- */
+    .orbit-shell {
+        width: 260px;
+        height: 260px;
+    }
+
+    .orbit-core {
+        font-size: 13px;
+    }
+
+    .orbit-dot {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+    }
+
+    /* -------- OVERVIEW GRID -------- */
+    .overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .overview-card {
+        padding: 18px;
+        font-size: 14px;
+    }
+
+    .overview-card h4 {
+        font-size: 15px;
+    }
+
+    /* -------- GENERIC CARDS -------- */
+    .card {
+        padding: 22px;
+    }
+
+    .card h3 {
+        font-size: 18px;
+    }
+
+    /* -------- KEYS VIEW -------- */
+    .key-box {
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        font-size: 14px;
+    }
+
+    .copy-btn {
+        padding: 10px 14px;
+        white-space: nowrap;
+    }
+
+    .snippet-box {
+        font-size: 13px;
+        max-height: 260px;
+    }
+
+    /* -------- SUPPORT -------- */
+    .support-hero {
+        padding: 32px 28px;
+    }
+
+    .support-hero h2 {
+        font-size: 20px;
+    }
+
+    .support-hero p {
+        font-size: 14px;
+    }
+
+    .support-contacts {
+        gap: 16px;
+    }
+
+    .contact-card {
+        min-width: 260px;
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    /* -------- TIPS -------- */
+    .tips {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .tip h4 {
+        font-size: 16px;
+    }
+
+    .tip p {
+        font-size: 14px;
+    }
+}
+
+
+
+
+        /* responsive adjustments */
+        @media (max-width:900px){
+            
+            .brand h2{display:none}
+            .nav-link{padding:10px;font-size:13px}
+            .main{padding:18px}
+            .overview-layout{
+                flex-direction:column;
+            }
+            .overview-right{
+                order:-1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" role="navigation" aria-label="Sidebar">
+        <div class="brand">
+            <div class="logo">VP</div>
+            <h2>VPay</h2>
+        </div>
+
+        <nav class="nav" id="sideNav">
+            <a class="nav-link active" href="#overview" data-target="#overview">
+                <div class="left">📊 <span>Overview</span></div>
+                <div class="sidebar-badge">NEW</div>
+            </a>
+
+            <a class="nav-link" href="#kyc" data-target="#kyc">
+                <div class="left">🛡 <span>KYC Status</span></div>
+                <div>
+                    {% if kyc %}
+                        {% if kyc.is_verified %}
+                            <span class="sidebar-badge success">Approved</span>
+                        {% else %}
+                            <span class="sidebar-badge pending">Pending</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="sidebar-badge pending">Not submitted</span>
+                    {% endif %}
+                </div>
+            </a>
+
+            <a class="nav-link" href="#keys" data-target="#keys">
+                <div class="left">🔑 <span>Test Keys</span></div>
+                <div>
+                    {% if test_keys %}
+                        <span class="sidebar-badge success">Ready</span>
+                    {% else %}
+                        <span class="sidebar-badge pending">Locked</span>
+                    {% endif %}
+                </div>
+            </a>
+
+            <a class="nav-link" href="#support" data-target="#support">
+                <div class="left">💬 <span>Support</span></div>
+                <div class="sidebar-badge">Help</div>
+            </a>
+              <!-- Always forces admin login page to appear -->
+      <a   class="nav-links" href="{% url 'admin:login' %}?next=/admin/" > 
+         <div class="left"> 👨‍💼<span>Admin</span></div>
+ </a>
+{% if request.user.is_active and request.user.is_staff %}
+  <a  class="nav-links" href="{% url 'admin:analytics' %}" > 
+     <div class="left"> 📈<span>Analytics</span></div>
+</a>
+{% else %}
+ <a class="nav-links"  href="/admin/login/?next=/admin/analytics/" > 
+<div class="left"> 📈<span>Analytics</span></div></a>
+
+{% endif %}
+
+
+  
+        </nav>
+
+       
+
+        <div class="nav-footer">
+             <form method="post" action="{% url 'core:logout' %}" class="inline-form">
+            {% csrf_token %}
+            <button class="btn btn-ghost" type="submit">Logout</button>
+        </form>
+        <div>VPay © 2025</div></div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <!-- header -->
+        <div class="header">
+            <div>
+                <div class="title">VPay Dashboard</div>
+                <div class="subtitle">
+                    Welcome
+                    {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
+                    — manage your KYC & access sandbox test keys.
+                </div>
+            </div>
+            <div class="user-chip" title="Logged in user">
+                <div class="avatar">
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name|slice:":1"|upper }}
+                    {% else %}
+                        {{ user.username|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div class="user-meta">
+                    <div class="name">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name }}
+                        {% else %}
+                            {{ user.username }}
+                        {% endif %}
+                    </div>
+                    <div class="small">
+                        {% if user.email %}{{ user.email }}{% else %}No email{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- =============== OVERVIEW VIEW =============== -->
+            <section id="overview" class="view active" data-reveal>
+                <div class="card overview-hero revealed">
+                    <div class="overview-layout">
+                        <div class="overview-left">
+                            <div class="overview-title">
+                                Good {% now "H" as current_hour %}{% if current_hour|add:"0" < 12 %}morning{% elif current_hour|add:"0" < 17 %}afternoon{% else %}evening{% endif %},
+                                {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %} 👋
+                            </div>
+                            <div class="overview-sub">
+                                You’re in <strong>Sandbox mode</strong>. Use this space to track your KYC status
+                                and grab your test keys to start integrating VPay checkout.
+                            </div>
+
+                            <div class="status-chips">
+                                <div class="status-pill">
+                                    <span class="status-dot"></span>
+                                    Environment: <strong>Sandbox</strong>
+                                </div>
+
+                                {% if kyc and kyc.is_verified %}
+                                    <div class="status-pill success">
+                                        <span class="status-dot"></span>
+                                        KYC: <strong>Approved</strong>
+                                    </div>
+                                {% elif kyc %}
+                                    <div class="status-pill warn">
+                                        <span class="status-dot warn"></span>
+                                        KYC: <strong>Pending review</strong>
+                                    </div>
+                                {% else %}
+                                    <div class="status-pill warn">
+                                        <span class="status-dot warn"></span>
+                                        KYC: <strong>Not submitted</strong>
+                                    </div>
+                                {% endif %}
+
+                                {% if test_keys %}
+                                    <div class="status-pill success">
+                                        <span class="status-dot"></span>
+                                        Test keys: <strong>Ready</strong>
+                                    </div>
+                                {% else %}
+                                    <div class="status-pill locked">
+                                        <span class="status-dot locked"></span>
+                                        Test keys: <strong>Locked until KYC</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <ul class="overview-steps">
+                                <li class="overview-step done">
+                                    <div class="step-index">1</div>
+                                    <div>
+                                        <strong>Account created</strong>
+                                        <span>Your VPay dashboard is live.</span>
+                                    </div>
+                                </li>
+
+                                <li class="overview-step {% if kyc and kyc.is_verified %}done{% elif kyc %}{% else %}{% endif %}">
+                                    <div class="step-index">{% if kyc and kyc.is_verified %}✔{% else %}2{% endif %}</div>
+                                    <div>
+                                        <strong>Complete / review KYC</strong>
+                                        {% if kyc and kyc.is_verified %}
+                                            <span>KYC approved by VPay team.</span>
+                                        {% elif kyc %}
+                                            <span>Submitted — we’re reviewing your details.</span>
+                                        {% else %}
+                                            <span>Submit your documents to unlock keys.</span>
+                                        {% endif %}
+                                    </div>
+                                </li>
+
+                                <li class="overview-step {% if test_keys %}done{% endif %}">
+                                    <div class="step-index">{% if test_keys %}✔{% else %}3{% endif %}</div>
+                                    <div>
+                                        <strong>Use sandbox test keys</strong>
+                                        {% if test_keys %}
+                                            <span>Copy keys and plug them into your app.</span>
+                                        {% else %}
+                                            <span>Keys will be available once KYC is approved.</span>
+                                        {% endif %}
+                                    </div>
+                                </li>
+
+                                <li class="overview-step">
+                                    <div class="step-index">4</div>
+                                    <div>
+                                        <strong>Run end-to-end test payments</strong>
+                                        <span>Simulate success, failure, and refund flows.</span>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="overview-actions">
+                                <button type="button" class="btn-primary" data-open-tab="keys">
+                                    🔑 View sandbox test keys
+                                </button>
+                                <button type="button" class="btn-ghost-soft" data-open-tab="kyc">
+                                    🛡 Check KYC status
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Animated visual (CSS “orbit”) -->
+                        <div class="overview-right">
+                            <div class="orbit-shell">
+                                <div class="orbit-core">
+                                    <div>VPay Sandbox</div>
+                                    <span>Secure test checkout</span>
+                                </div>
+                                <div class="orbit-ring"></div>
+                                <div class="orbit-dot dot1">💳</div>
+                                <div class="orbit-dot dot2">🔐</div>
+                                <div class="orbit-dot dot3">⚙️</div>
+                                <div class="orbit-glow"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-grid">
+                    <div class="overview-card">
+                        <div class="overview-tag">Step-by-step</div>
+                        <h4>1. Set up checkout in your app</h4>
+                        <p>Use your <b>public key</b> in the frontend and <b>secret key</b> in your backend to create payment sessions in sandbox.</p>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-tag">Recommended</div>
+                        <h4>2. Test common payment flows</h4>
+                        <p>Simulate successful payments, failures, cancellations and refunds before you connect a real payment method.</p>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-tag">Webhooks</div>
+                        <h4>3. Listen to payment events</h4>
+                        <p>Configure a sandbox webhook URL and verify that your app correctly handles payment success, failure and refund events.</p>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-tag">API docs</div>
+                        <h4>4. Explore the REST API</h4>
+                        <p>Use the test keys with tools like <b>Postman</b> or <b>curl</b> to inspect responses and integration errors quickly.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============== KYC VIEW =============== -->
+            <section id="kyc" class="view" data-reveal>
+                <div class="card kyc-card">
+                    <h3>KYC Verification Status</h3>
+                    <div class="kyc-layout">
+                        {% if kyc and kyc.is_verified %}
+                            <div class="kyc-banner success">
+                                <strong>✔ KYC approved</strong><br>
+                                Your KYC is approved. You now have access to VPay <b>Sandbox Test Keys</b> and can fully integrate the checkout flow.
+                            </div>
+                            <p style="color:var(--text-muted);font-size:13px;margin:0;">
+                                You can continue using sandbox as long as you need. When you’re ready to go live, your business details are already verified.
+                            </p>
+                        {% elif kyc %}
+                            <div class="kyc-banner pending">
+                                <strong>⟳ KYC under review</strong><br>
+                                Our team is reviewing your details. You’ll receive an email as soon as your KYC is approved.
+                            </div>
+                            <p style="color:var(--text-muted);font-size:13px;margin:0;">
+                                Typical review time is <b>24–48 hours</b>. You can still explore the dashboard and documentation while you wait.
+                            </p>
+                        {% else %}
+                            <div class="kyc-banner">
+                                <strong>⟳ KYC not submitted</strong><br>
+                                You haven’t submitted KYC details yet. Complete the KYC form to unlock sandbox keys and start integrating.
+                            </div>
+                            <p style="color:var(--text-muted);font-size:13px;margin:0;">
+                                KYC helps us keep your account secure and compliant. It usually takes less than <b>5 minutes</b> to complete.
+                            </p>
+                        {% endif %}
+
+                        <div class="tips">
+                            <div class="tip">
+                                <h4>What did you submit?</h4>
+                                <p>Basic details, bank details, ID verification and PAN card photo are securely stored and used only for verification.</p>
+                            </div>
+                            <div class="tip">
+                                <h4>While you wait</h4>
+                                <p>Prepare your integration: design your checkout page, set callback URLs and review error handling flows.</p>
+                            </div>
+                            <div class="tip">
+                                <h4>Need to update details?</h4>
+                                <p>Contact support if you uploaded a wrong document or need to correct any business information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============== KEYS VIEW =============== -->
+            {% if kyc and kyc.is_verified %}
+            <section id="keys" class="view" data-reveal>
+                <div class="card">
+                    <h3>Sandbox Test Keys</h3>
+                    <p style="color:var(--text-muted);margin-top:6px;font-size:13px">
+                        Use these keys to integrate and <b>test payments in sandbox mode</b>. Do not share your secret key or expose it in frontend code.
+                    </p>
+
+                    <div class="keys-area">
+                        <div class="key-box reveal-up">
+                            <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px">
+                                {{ test_keys.public_key|default:"(not generated yet)" }}
+                            </div>
+                            <button class="copy-btn" data-key="{{ test_keys.public_key }}">Copy public key</button>
+                        </div>
+
+                        <div class="key-box reveal-up">
+                            <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px">
+                                {{ test_keys.secret_key|default:"(not generated yet)" }}
+                            </div>
+                            <button class="copy-btn" data-key="{{ test_keys.secret_key }}">Copy secret key</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px;color:var(--text-muted);font-size:13px">
+                        These keys are <b>sandbox-only</b> and will never charge real money. Use them to safely build and test your integration.
+                    </div>
+
+                    <!-- Simple code snippet tabs -->
+                    <div class="snippet-tabs">
+                        <button type="button" class="snippet-tab active" data-snippet="js">Frontend JS</button>
+                        <button type="button" class="snippet-tab" data-snippet="python">Python (Django)</button>
+                        <button type="button" class="snippet-tab" data-snippet="curl">cURL</button>
+                    </div>
+
+                    <div class="snippet-box" id="snippet-js">
+fetch("https://api.vpay.test/payments", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-VPAY-PUBLIC-KEY": "{{ test_keys.public_key|default:'pk_test_xxx' }}"
+  },
+  body: JSON.stringify({
+    amount: 50000, // in paise
+    currency: "INR",
+    description: "Test payment from sandbox"
+  })
+});</div>
+
+                    <div class="snippet-box" id="snippet-python" style="display:none;">
+# views.py (Django - server side)
+import requests
+
+def create_sandbox_payment():
+    url = "https://api.vpay.test/payments"
+    headers = {
+        "X-VPAY-SECRET-KEY": "{{ test_keys.secret_key|default:'sk_test_xxx' }}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "amount": 50000,
+        "currency": "INR",
+        "description": "Test payment from sandbox",
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    return res.json()</div>
+
+                    <div class="snippet-box" id="snippet-curl" style="display:none;">
+curl -X POST https://api.vpay.test/payments \
+  -H "Content-Type: application/json" \
+  -H "X-VPAY-SECRET-KEY: {{ test_keys.secret_key|default:'sk_test_xxx' }}" \
+  -d '{
+        "amount": 50000,
+        "currency": "INR",
+        "description": "Test payment from sandbox"
+      }'</div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- =============== SUPPORT VIEW =============== -->
+            <section id="support" class="view" data-reveal>
+                <section class="support-hero card">
+                    <h2>Need help integrating VPay?</h2>
+                    <p>Our team is here to help — integration questions, KYC status doubts, or sandbox troubleshooting.</p>
+
+                    <div class="support-contacts" role="list" aria-label="Support contacts">
+                        <div class="contact-card" data-reveal>
+                            <b>Integration Support</b>
+                            <div>📧 support@vpay.com</div>
+                            <div class="contact-note">Response time: <b>4–12 hours</b></div>
+                        </div>
+
+                        <div class="contact-card" data-reveal>
+                            <b>Sales &amp; Partnerships</b>
+                            <div>📧 partners@vpay.com</div>
+                            <div class="contact-note">Business hours: Mon–Fri (9am–6pm)</div>
+                        </div>
+
+                        <div class="contact-card" data-reveal>
+                            <b>Security &amp; Abuse</b>
+                            <div>📧 secops@vpay.com</div>
+                            <div class="contact-note">Reply: within 24 hours</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;color:var(--text-muted);font-size:13px">
+                        Prefer chat? Use the Support link in your account to open a ticket and attach screenshots or logs.
+                    </div>
+                </section>
+
+                <div class="tips">
+                    <div class="tip">
+                        <h4>API &amp; SDK docs</h4>
+                        <p>Follow the language-specific guides to plug VPay sandbox into your app with minimal boilerplate.</p>
+                    </div>
+                    <div class="tip">
+                        <h4>Debugging sandbox errors</h4>
+                        <p>Use correlation IDs from the response headers and share them with support for faster investigation.</p>
+                    </div>
+                    <div class="tip">
+                        <h4>Best practices</h4>
+                        <p>Always validate webhook signatures, retry failed notifications and securely store your secret keys.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#0099ff" fill-opacity="1"
+                  d="M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,245.3C672,267,768,277,864,245.3C960,213,1056,139,1152,106.7C1248,75,1344,85,1392,90.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+            </path>
+        </svg>
+    </main>
+
+    <!-- JS: interactions and animations -->
+    <script>
+        // TAB SWITCHING: sidebar nav highlight & view swap
+        const navLinks = document.querySelectorAll('.nav-link');
+        const views = document.querySelectorAll('.view');
+
+        function activateViewById(id){
+            const targetSelector = '#' + id;
+            const targetView = document.querySelector(targetSelector);
+            if (!targetView) return;
+
+            // highlight nav
+            navLinks.forEach(l => {
+                if(l.getAttribute('data-target') === "admin" ||l.getAttribute('data-target') === "analytics" ){
+                    return;
+                }
+                if (l.getAttribute('data-target') === targetSelector) {
+                    l.classList.add('active');
+                } else {
+                    l.classList.remove('active');
+                }
+            });
+
+            // switch views
+            views.forEach(v => v.classList.remove('active', 'view-enter'));
+            targetView.classList.add('active', 'view-enter');
+            setTimeout(() => targetView.classList.remove('view-enter'), 400);
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('data-target'); // e.g. "#overview"
+                if (!target) return;
+                const viewEl = document.querySelector(target);
+                if (!viewEl) return; // do nothing if view not available (e.g. keys locked)
+                activateViewById(target.replace('#',''));
+            });
+        });
+
+        // Buttons in Overview that open other tabs
+        document.querySelectorAll('[data-open-tab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-open-tab');
+                activateViewById(id);
+            });
+        });
+
+        // copy buttons
+        document.querySelectorAll('.copy-btn').forEach(btn=>{
+            btn.addEventListener('click', async () => {
+                const key = btn.dataset.key || '';
+                try {
+                    await navigator.clipboard.writeText(key);
+                    btn.classList.add('copied');
+                    const prev = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(()=>{ btn.textContent = prev; btn.classList.remove('copied'); }, 1400);
+                } catch(e){
+                    console.warn('copy failed', e);
+                    btn.textContent = 'Copy';
+                }
+            });
+        });
+
+        // snippet tabs in Keys view
+        const snippetTabs = document.querySelectorAll('.snippet-tab');
+        const snippetBoxes = {
+            js: document.getElementById('snippet-js'),
+            python: document.getElementById('snippet-python'),
+            curl: document.getElementById('snippet-curl'),
+        };
+        snippetTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const key = tab.getAttribute('data-snippet');
+                snippetTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                Object.keys(snippetBoxes).forEach(k => {
+                    if (snippetBoxes[k]) {
+                        snippetBoxes[k].style.display = (k === key) ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+
+        // reveal on load + intersection observer for reveal effects
+        function revealAll() {
+            document.querySelectorAll('[data-reveal]').forEach((el, i)=>{
+                setTimeout(()=> el.classList.add('revealed'), 80*i);
+            });
+
+            // support hero background & contact cards
+            setTimeout(()=>{
+                const hero = document.querySelector('.support-hero'); if(hero) hero.classList.add('revealed');
+                document.querySelectorAll('.contact-card').forEach((c, idx)=> setTimeout(()=> c.classList.add('revealed'), 120*(idx+1)));
+                // reveal tip boxes
+                document.querySelectorAll('.reveal-up').forEach((r, idx)=> setTimeout(()=> r.classList.add('show'), 100*(idx+1)));
+            }, 300);
+        }
+
+        // Observe cards if they appear (for long pages)
+        const io = new IntersectionObserver(entries=>{
+            entries.forEach(entry=>{
+                if(entry.isIntersecting){
+                    entry.target.classList.add('revealed');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, {threshold: 0.12});
+
+        document.querySelectorAll('.card').forEach(c=>{
+            io.observe(c);
+        });
+
+        // initial reveal
+        window.addEventListener('load', revealAll);
+
+        // optional real-time polling (keeps existing behavior)
+        setInterval(async()=>{
+            try{
+                const res = await fetch('/api/kyc/status/');
+                if(!res.ok) return;
+                const data = await res.json();
+                if(data.is_verified){
+                    if(!window._vpay_reloaded){
+                        window._vpay_reloaded = true;
+                        setTimeout(()=> location.reload(), 500);
+                    }
+                }
+            }catch(e){}
+        }, 8000);
+    </script>
+</body>
+</html>

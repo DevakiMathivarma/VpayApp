@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Mode KYC</title>
+    <link rel="stylesheet" href="/static/kyc/live_kyc.css">
+</head>
+<body>
+
+<div class="kyc-wrapper">
+
+    <!-- SIDEBAR -->
+    <div class="kyc-sidebar">
+
+        <div class="kyc-step active" data-step="1">
+            <div class="circle active-circle">1</div>
+            <p>Aadhaar & Address</p>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="kyc-step" data-step="2">
+            <div class="circle">2</div>
+            <p>Business Proofs</p>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="kyc-step" data-step="3">
+            <div class="circle">3</div>
+            <p>Director / UBO</p>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="kyc-step" data-step="4">
+            <div class="circle">4</div>
+            <p>Selfie & Bank</p>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="kyc-step" data-step="5">
+            <div class="circle">5</div>
+            <p>Submit</p>
+        </div>
+
+    </div>
+
+    <!-- FORM CONTENT -->
+    <div class="kyc-content">
+
+        <form action="/kyc/submit-live/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- STEP 1: Aadhaar & Address -->
+            <section class="step-section" id="step-1">
+                <h2>Aadhaar & Address Proof</h2>
+                <div class="form-card">
+                    <div class="row">
+                        <div class="field">
+                            <label>Aadhaar Front (image) *</label>
+                            <input type="file" name="aadhaar_front" accept="image/*" required>
+                        </div>
+                        <div class="field">
+                            <label>Aadhaar Back (image) *</label>
+                            <input type="file" name="aadhaar_back" accept="image/*" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Address Proof (Utility / Passport) *</label>
+                            <input type="file" name="address_proof" accept="image/*,application/pdf" required>
+                        </div>
+                        <div class="field">
+                            <label>Registered Address Line</label>
+                            <textarea name="registered_address" rows="3" placeholder="Optional: typed address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="next-btn" data-next="2">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: Business Proofs -->
+            <section class="step-section" id="step-2">
+                <h2>Business Documents</h2>
+                <div class="form-card">
+                    <div class="row">
+                        <div class="field">
+                            <label>GST Certificate (if applicable)</label>
+                            <input type="file" name="gst_certificate" accept="image/*,application/pdf">
+                        </div>
+                        <div class="field">
+                            <label>Business Registration Proof</label>
+                            <input type="file" name="business_registration_proof" accept="image/*,application/pdf" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Shop & Establishment (optional)</label>
+                            <input type="file" name="shop_establishment" accept="image/*,application/pdf">
+                        </div>
+                        <div class="field">
+                            <label>MSME / Udyam (optional)</label>
+                            <input type="file" name="msme_certificate" accept="image/*,application/pdf">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Incorporation Certificate / Partnership Deed</label>
+                            <input type="file" name="incorporation_or_partnership" accept="image/*,application/pdf" required>
+                        </div>
+                        <div class="field">
+                            <label>Trademark (optional)</label>
+                            <input type="file" name="trademark" accept="image/*,application/pdf">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="back-btn" data-back="1">Back</button>
+                    <button type="button" class="next-btn" data-next="3">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: Director / UBO -->
+            <section class="step-section" id="step-3">
+                <h2>Director / Ultimate Beneficial Owner (UBO)</h2>
+                <div class="form-card">
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Director / Owner Name *</label>
+                            <input type="text" name="director_name" required>
+                        </div>
+                        <div class="field">
+                            <label>Director PAN *</label>
+                            <input type="text" name="director_pan" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Director Aadhaar (number) *</label>
+                            <input type="text" name="director_aadhaar" required>
+                        </div>
+                        <div class="field">
+                            <label>UBO Name</label>
+                            <input type="text" name="ubo_name" placeholder="If different from director">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>UBO % Ownership</label>
+                            <input type="text" name="ubo_percentage" placeholder="e.g. 45%">
+                        </div>
+                        <div class="field">
+                            <label>UBO Document (ID/Proof)</label>
+                            <input type="file" name="ubo_document" accept="image/*,application/pdf">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="back-btn" data-back="2">Back</button>
+                    <button type="button" class="next-btn" data-next="4">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 4: Selfie & Bank -->
+            <section class="step-section" id="step-4">
+                <h2>Selfie, Signature & Bank</h2>
+                <div class="form-card">
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Selfie (photo) *</label>
+                            <input type="file" name="selfie" accept="image/*" required>
+                        </div>
+                        <div class="field">
+                            <label>Signature Upload *</label>
+                            <input type="file" name="signature" accept="image/*" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Cancelled Cheque / Passbook (mandatory)</label>
+                            <input type="file" name="cancelled_cheque" accept="image/*,application/pdf" required>
+                        </div>
+                        <div class="field">
+                            <label>Board Resolution (if applicable)</label>
+                            <input type="file" name="board_resolution" accept="image/*,application/pdf">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="back-btn" data-back="3">Back</button>
+                    <button type="button" class="next-btn" data-next="5">Next</button>
+                </div>
+            </section>
+
+            <!-- STEP 5: Submit -->
+            <section class="step-section" id="step-5">
+                <h2>Submit Live KYC</h2>
+                <div class="form-card">
+                    <p>All fields above are design-only for now. When you are ready, submit and we will save the files for manual/automated verification later.</p>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="back-btn" data-back="4">Back</button>
+                    <button type="submit" class="submit-btn">Submit Live KYC</button>
+                </div>
+            </section>
+
+        </form>
+
+    </div>
+</div>
+
+<script src="/static/kyc/live_kyc.js"></script>
+</body>
+</html>

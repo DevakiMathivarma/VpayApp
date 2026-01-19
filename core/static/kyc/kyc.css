@@ -1,0 +1,57 @@
+/* static/kyc/kyc.css */
+:root{
+  --bg1: #f3fbfb;
+  --muted: #6b7580;
+  --accent: #1ca08c;
+  --gold: linear-gradient(90deg,#ffb200,#ff8a00);
+}
+*{box-sizing:border-box;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif}
+body{margin:0;background:linear-gradient(135deg,var(--bg1),#f7f8ff);color:#15343b}
+a{color:inherit}
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:18px 34px;background:rgba(255,255,255,0.7);backdrop-filter:blur(6px);border-radius:10px;margin:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:10px;background:#e8f7f3;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent)}
+.brand-text .site{font-weight:800;color:#1a6db3}
+.container{max-width:1150px;margin:18px auto;padding:6px}
+.grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
+.card{background:linear-gradient(180deg,#fff,#fbfbff);padding:22px;border-radius:14px;box-shadow:0 10px 30px rgba(10,30,40,0.04)}
+.stepper{display:flex;gap:8px;margin-bottom:12px}
+.step{background:#fff;padding:8px 12px;border-radius:999px;font-weight:700;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.02)}
+.step.active{background: linear-gradient(90deg,#eaf9f2,#fff9e9);transform:translateY(-2px);transition:transform .25s}
+.title{font-size:20px;margin-bottom:6px}
+.muted{color:var(--muted);margin-bottom:14px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:13px;color:#53686e;margin-bottom:6px}
+input[type="text"], input[type="date"], input[type="email"], select, textarea{
+  width:100%;padding:11px;border-radius:10px;border:1px solid #eef2f3;background:#fff;font-size:14px;
+}
+.small-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sep{border:none;border-top:1px dashed rgba(0,0,0,0.04);margin:14px 0}
+.section-title{font-weight:700;margin-bottom:6px}
+
+.actions{display:flex;gap:12px;margin-top:12px}
+.btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+.btn.primary{background:var(--gold);color:#fff;box-shadow:0 6px 18px rgba(255,138,0,0.12);transition:transform .12s}
+.btn.primary:hover{transform:translateY(-3px)}
+.btn.ghost{background:transparent;border:1px solid rgba(34,50,60,0.06)}
+
+.status-card .status-badge{display:inline-flex;padding:8px 12px;border-radius:999px;font-weight:800}
+.status-badge.not_submitted{background:#eaf6ff;color:#1a6db3;animation:float 1.6s ease-in-out infinite alternate}
+.status-badge.submitted{background:#fff3f6;color:#b30f56;animation:float 1.8s ease-in-out infinite alternate}
+.status-badge.approved{background:#e9fbf2;color:#118751;animation:float 1.4s ease-in-out infinite alternate}
+.status-badge.rejected{background:#fff2f3;color:#b33a45;animation:float 1.6s ease-in-out infinite alternate}
+
+@keyframes float{
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-6px) scale(1.01); }
+}
+
+/* subtle pulse */
+.pulse{animation:pulseBG 1s ease-out}
+@keyframes pulseBG{0%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 8px 22px rgba(26,160,140,0.08)}100%{box-shadow:0 0 0 rgba(0,0,0,0)}}
+
+/* preview & doc list */
+.doc-preview .doc-item{padding:8px;border-radius:8px;background:rgba(240,244,247,0.6);margin-bottom:8px}
+
+/* responsive */
+@media(max-width:980px){.grid{grid-template-columns:1fr}.navbar{margin:8px}.container{padding:8px}}

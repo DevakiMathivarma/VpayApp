@@ -1,0 +1,24 @@
+<!-- templates/kyc/admin_revision_detail.html -->
+{% extends "core/base.html" %}
+{% block content %}
+<div class="container">
+  <h2>Review KYC Revision for {{ rev.user.username }}</h2>
+
+  <h3>Submitted data</h3>
+  <p><strong>Name:</strong> {{ rev.full_name }}</p>
+  <p><strong>DOB:</strong> {{ rev.dob }}</p>
+  <p><strong>ID:</strong> {{ rev.id_type }} {{ rev.id_number }}</p>
+  <p><strong>Account:</strong> {{ rev.acc_number }} ({{ rev.acc_holder }})</p>
+
+  <h3>Documents</h3>
+  {% if rev.id_document %}<p><a href="{{ rev.id_document.url }}" target="_blank">View ID doc</a></p>{% endif %}
+  {% if rev.bank_proof %}<p><a href="{{ rev.bank_proof.url }}" target="_blank">View bank proof</a></p>{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="note" placeholder="Review note (optional)"></textarea><br/>
+    <button type="submit" name="action" value="approve">Approve</button>
+    <button type="submit" name="action" value="reject">Reject</button>
+  </form>
+</div>
+{% endblock %}

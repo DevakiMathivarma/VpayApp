@@ -1,0 +1,18 @@
+<!-- templates/kyc/admin_revisions_list.html -->
+{% extends "core/base.html" %}  {# if you have a base template; else remove #}
+{% block content %}
+<div class="container">
+  <h2>Pending KYC Revisions</h2>
+  <ul>
+    {% for r in revisions %}
+      <li>
+        <a href="{% url 'kyc:admin_revision_detail' r.pk %}">
+          {{ r.user.username }} — {{ r.full_name }} — {{ r.created_at }}
+        </a>
+      </li>
+    {% empty %}
+      <li>No pending revisions</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

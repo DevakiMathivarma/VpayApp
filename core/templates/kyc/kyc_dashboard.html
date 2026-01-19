@@ -1,0 +1,184 @@
+<!-- templates/kyc/kyc_dashboard.html -->
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VPAY — KYC Verification</title>
+  <link rel="stylesheet" href="{% static 'kyc/kyc.css' %}">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">
+      <div class="logo">VP</div>
+      <div class="brand-text">
+        <div class="site">VPAY</div>
+        <div class="sub">Secure UPI Dashboard</div>
+      </div>
+    </div>
+    <div class="navlinks">
+     
+      <a href="#">Stats</a>
+      <a href="#">Admin</a>
+      <a href="#">Analytics</a>
+   
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="grid">
+      <section class="card kyc-card">
+        <div class="stepper">
+          <div class="step active">1. Details</div>
+          <div class="step">2. ID</div>
+          <div class="step">3. Bank</div>
+          <div class="step">4. Submit</div>
+        </div>
+
+        <h1 class="title">KYC Verification</h1>
+        <p class="muted">Complete these steps to verify your account. You can save progress and return later.</p>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="form-row">
+            <label>Full name</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}<div class="error">{{ form.full_name.errors }}</div>{% endif %}
+          </div>
+
+          <div class="form-row small-grid">
+            <div>
+              <label>Date of birth</label>
+              {{ form.dob }}
+              {% if form.dob.errors %}<div class="error">{{ form.dob.errors }}</div>{% endif %}
+            </div>
+            <div>
+              <label>Email (optional)</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="error">{{ form.email.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <hr class="sep"/>
+
+          <h3 class="section-title">Government ID</h3>
+          <div class="form-row">
+            <label>ID type</label>
+            {{ form.id_type }}
+            {% if form.id_type.errors %}<div class="error">{{ form.id_type.errors }}</div>{% endif %}
+          </div>
+          <div class="form-row">
+            <label>ID number</label>
+            {{ form.id_number }}
+            {% if form.id_number.errors %}<div class="error">{{ form.id_number.errors }}</div>{% endif %}
+          </div>
+          <div class="form-row">
+            <label>Upload ID photo</label>
+            {{ form.id_document }}
+            {% if form.id_document.errors %}<div class="error">{{ form.id_document.errors }}</div>{% endif %}
+          </div>
+
+          <hr class="sep"/>
+
+          <h3 class="section-title">Bank details</h3>
+          <div class="form-row">
+            <label>Account holder name</label>
+            {{ form.acc_holder }}
+            {% if form.acc_holder.errors %}<div class="error">{{ form.acc_holder.errors }}</div>{% endif %}
+          </div>
+          <div class="form-row small-grid">
+            <div>
+              <label>Account number</label>
+              {{ form.acc_number }}
+              {% if form.acc_number.errors %}<div class="error">{{ form.acc_number.errors }}</div>{% endif %}
+            </div>
+            <div>
+              <label>Confirm account number</label>
+              {{ form.acc_confirm }}
+              {% if form.acc_confirm.errors %}<div class="error">{{ form.acc_confirm.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>IFSC</label>
+            {{ form.ifsc }}
+            {% if form.ifsc.errors %}<div class="error">{{ form.ifsc.errors }}</div>{% endif %}
+          </div>
+
+          <div class="form-row">
+            <label>Upload bank proof</label>
+            {{ form.bank_proof }}
+            {% if form.bank_proof.errors %}<div class="error">{{ form.bank_proof.errors }}</div>{% endif %}
+          </div>
+
+          <div class="form-row">
+            <label>Upload selfie (optional)</label>
+            {{ form.selfie }}
+            {% if form.selfie.errors %}<div class="error">{{ form.selfie.errors }}</div>{% endif %}
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn primary">Submit for Review</button>
+           
+          </div>
+        </form>
+      </section>
+
+      <aside class="card status-card">
+        <div class="status-hero">
+          <div>
+            <h3>KYC Status</h3>
+            {% if kyc %}
+              <div class="status-badge {{ kyc.status }}">{{ kyc.get_status_display }}</div>
+            {% else %}
+              <div class="status-badge not_submitted">Not Submitted</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="summary">
+          <p><strong>Full name:</strong> {{ kyc.full_name|default:"—" }}</p>
+          <p><strong>ID:</strong> {{ kyc.id_type }} {{ kyc.id_number|default:"—" }}</p>
+          <p><strong>Bank:</strong> {{ kyc.acc_number|default:"—" }} ({{ kyc.acc_holder|default:"—" }})</p>
+        </div>
+
+        <div class="doc-preview">
+          <h4>Documents</h4>
+          {% if kyc.id_document %}
+            <div class="doc-item"><a href="{{ kyc.id_document.url }}" target="_blank">View ID</a></div>
+          {% endif %}
+          {% if kyc.bank_proof %}
+            <div class="doc-item"><a href="{{ kyc.bank_proof.url }}" target="_blank">View Bank Proof</a></div>
+          {% endif %}
+        </div>
+
+        {% if pending_revision %}
+          <div class="pending-note">
+            <strong>Pending revision submitted:</strong>
+            <p>Submitted at {{ pending_revision.created_at }}</p>
+          </div>
+        {% endif %}
+
+        <div class="admin-actions">
+          {% if request.user.is_staff %}
+            <a class="btn primary" href="{% url 'kyc:admin_revisions' %}">Open Revisions</a>
+          {% endif %}
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- Embedded JS: progressive UI touches only -->
+  <script>
+    // tiny enhancement: animate badge on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const badge = document.querySelector('.status-badge');
+      if (badge) {
+        badge.classList.add('pulse');
+        setTimeout(()=> badge.classList.remove('pulse'), 2200);
+      }
+    });
+  </script>
+</body>
+</html>
