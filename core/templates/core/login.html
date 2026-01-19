@@ -75,10 +75,21 @@
       <!-- <a href="{% url 'google_login_redirect' %}?next={{ request.GET.next|default:'/dashboard/' }}">
   <button type="button">Sign in with Google</button>
 </a> -->
-      <a href="/accounts/google/login/?next=/vpay_dashboard/">
+      <!-- <a href="/accounts/google/login/?next=/vpay_dashboard/">
         <button type="button">Sign in with Google</button>
-      </a>
+      </a> -->
 
+      <a href="/accounts/google/login/?next=/vpay_dashboard/" class="google-btn">
+  <span class="google-icon">
+    <svg width="18" height="18" viewBox="0 0 48 48">
+      <path fill="#EA4335" d="M24 9.5c3.9 0 6.6 1.7 8.1 3.1l5.9-5.9C34.2 3.1 29.6 1 24 1 14.9 1 7.2 6.2 3.6 13.7l6.9 5.3C12.4 13.4 17.7 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.5 24c0-1.6-.1-2.8-.4-4.1H24v7.8h12.7c-.6 3-2.4 5.5-5.1 7.2l7.8 6c4.6-4.3 7.1-10.6 7.1-16.9z"/>
+      <path fill="#FBBC05" d="M10.5 28.9c-.5-1.5-.8-3.1-.8-4.9s.3-3.4.8-4.9l-6.9-5.3C1.4 17.3 0 20.5 0 24s1.4 6.7 3.6 10.2l6.9-5.3z"/>
+      <path fill="#34A853" d="M24 47c5.6 0 10.3-1.8 13.7-4.9l-7.8-6c-2.2 1.5-5 2.4-8 2.4-6.3 0-11.6-3.9-13.5-9.5l-6.9 5.3C7.2 41.8 14.9 47 24 47z"/>
+    </svg>
+  </span>
+  <span class="google-text">Sign in with Google</span>
+</a>
       <div class="space small">
         <a class="link" href="{% url 'core:register' %}">Create a new account</a>
       </div>
